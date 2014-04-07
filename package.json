@@ -1,0 +1,38 @@
+{
+  "name": "generator-ramlang",
+  "version": "0.1.0",
+  "description": "A generator for creating angular services based off a RAML spec file.",
+  "license": "MIT",
+  "main": "app/index.js",
+  "repository": "alexios3d/generator-ramlang",
+  "author": {
+    "name": "Alex Lambrinos",
+    "email": "alex@syple.com.au",
+    "url": "https://github.com/alexios3d"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "files": [
+    "app"
+  ],
+  "keywords": [
+    "yeoman-generator"
+  ],
+  "dependencies": {
+    "chalk": "~0.4.0",
+    "inflection": "^1.3.5",
+    "lodash": "^2.4.1",
+    "raml-parser": "^0.8.5",
+    "yeoman-generator": "^0.16.0"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "peerDependencies": {
+    "yo": ">=1.0.0"
+  }
+}
