@@ -10,7 +10,6 @@ var fs = require('fs');
 var inflect = require('inflection');
 
 var application = require('./generator/app');
-var documentation = require('./generator/documentation');
 var provider = require('./generator/provider');
 var service = require('./generator/service');
 
