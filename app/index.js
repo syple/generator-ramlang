@@ -8,7 +8,11 @@ var chalk = require('chalk');
 var ramlParser = require('raml-parser');
 var fs = require('fs');
 var inflect = require('inflection');
-var _ = require('lodash');
+
+var application = require('./generator/app');
+var documentation = require('./generator/documentation');
+var provider = require('./generator/provider');
+var service = require('./generator/service');
 
 var RamlangGenerator = yeoman.generators.Base.extend({
 
@@ -237,88 +241,40 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     if (!this.selectedResources) { return; }
     var self = this;
     var fileContents = '\'use strict\';\n\n';
-
-    var appBindings = {
-      app: {
-        name: this.apiModuleName + (this.apiModuleName != 'api' ? '-api' : '')
-      }
-    };
-
-    var stripModuleDecleration = function(templateText) {
-      return templateText.replace(/angular.module\(.*\)/, '');
-    };
-
-    var formatDescription = function(description, isForComments) {
-      description = description || '';
-      description = description.trim();
-      var result = '';
-      var words = description.replace(/[\r\n]/g, ' ').split(' ');
-      var totalWordsInRow = 14;
-      var wordCount = 0;
-      words.forEach(function(word) {
-
-        if (wordCount == totalWordsInRow) {
-          result += '\n' + (isForComments ? ' *' : '');
-          wordCount = 1;
-        }
-
-        if (wordCount == 0) {
-          result += word;
-        } else {
-          result += ' ' + word;
-        }
-
-        wordCount++;
-      });
-
-      return result;
-    };
+    var moduleName = this.apiModuleName + (this.apiModuleName != 'api' ? '-api' : '');
 
     /**
      * A helper function to direct the resolved template text into a file or append it to a variable.
      * @param {String} resourceName - The name of the resource to use.
      * @param {String} templateText - The template text value to resolve.
-     * @param {Boolean} [excludeAppModule] - A boolean value to determine if this method should exclude the angular module
-     *                                       declaration from the top of the templates.
      */
-    var writeTemplateToDest = function(resourceName, templateText, excludeAppModule) {
-      var resolvedTemplateText = _.template(templateText, appBindings);
+    var writeTemplateToDest = function(resourceName, templateText) {
 
       if (self.generateInOneFile) {
-        if (excludeAppModule) {
-          resolvedTemplateText = stripModuleDecleration(resolvedTemplateText);
-        }
 
-        fileContents += resolvedTemplateText;
+        fileContents += templateText;
         self.log(chalk.cyan('Added ->', resourceName));
       } else {
         resourceName = inflect.transform(resourceName, ['underscore', 'dasherize']);
-        resolvedTemplateText = fileContents + resolvedTemplateText;
-        self.write(resourceName + '.js', resolvedTemplateText + ';');
+        templateText = fileContents + templateText;
+        self.write(resourceName + '.js', templateText + ';');
       }
     };
 
-    var appTemplatePath       = path.join(this.sourceRoot(), 'app.js');
-    var providerTemplatePath  = path.join(this.sourceRoot(), 'provider.js');
-    var serviceTemplatePath   = path.join(this.sourceRoot(), 'service.js');
-    var appModuleTemplateText = this.readFileAsString(appTemplatePath);
-    var providerTemplateText  = this.readFileAsString(providerTemplatePath);
-    var serviceTemplateText   = this.readFileAsString(serviceTemplatePath);
+    var appTemplateText = application.generate(moduleName);
+    var providerTemplateText = provider.generate(moduleName, !this.generateInOneFile);
 
-    writeTemplateToDest(appBindings.app.name, appModuleTemplateText);
-    writeTemplateToDest('api-provider', providerTemplateText, this.generateInOneFile);
+    writeTemplateToDest(moduleName, appTemplateText);
+    writeTemplateToDest('api-provider', providerTemplateText);
 
     this.selectedResources.forEach(function(resource) {
-      appBindings.resource = resource;
-      appBindings.resource.displayName = inflect.singularize(resource.displayName).replace(' ', '') + 'Api';
-      appBindings.resource.description = formatDescription(resource.description, true);
-
-      writeTemplateToDest(appBindings.resource.displayName, serviceTemplateText, self.generateInOneFile);
+      var serviceTemplateText = service.generate(moduleName, resource, !self.generateInOneFile);
+      writeTemplateToDest(resource.displayName, serviceTemplateText);
     });
 
     if (this.generateInOneFile) {
       fileContents += ';';
-      this.write(appBindings.app.name + '.js', fileContents);
+      this.write(moduleName + '.js', fileContents);
     }
   }
 });
