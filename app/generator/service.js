@@ -3,6 +3,7 @@ var _ = require('lodash');
 var inflect = require('inflection');
 var generatorUtil = require('./utils');
 var documentation = require('./documentation');
+var methods = require('./methods');
 
 module.exports = {};
 
@@ -18,6 +19,7 @@ module.exports.generate = function(moduleName, ramlResourceObj, withModule) {
   var appModuleTemplateText = generatorUtil.readFileAsString(templatePath);
   ramlResourceObj.displayName = inflect.singularize(ramlResourceObj.displayName).replace(' ', '') + 'Api';
   ramlResourceObj.description = documentation.formatDescription(ramlResourceObj.description, true);
+  ramlResourceObj.methods = methods.generate(ramlResourceObj);
 
   var resolvedTemplate = _.template(appModuleTemplateText, {
     app: {

@@ -133,7 +133,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
           self.log('');
         }
 
-        self.resources = data.resources;
+        self.ramlObj = data;
         endFn();
       }, function(error) {
         self.log('');
@@ -186,14 +186,14 @@ var RamlangGenerator = yeoman.generators.Base.extend({
    */
   finalQuestions: function() {
     // Return if there are no resources to process
-    if (!this.resources) { return; }
+    if (!this.ramlObj.resources) { return; }
 
     var done = this.async();
     var prompts = [];
     var self = this;
 
     // Map all of the resource display names
-    this.allResourceDisplayNames = self.resources.map(function(item) {
+    this.allResourceDisplayNames = self.ramlObj.resources.map(function(item) {
       return item.displayName;
     });
 
@@ -224,11 +224,11 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     this.prompt(prompts, function (props) {
       var selectedResources = props.resourcesToGenerate || this.allResourceDisplayNames;
       this.generateInOneFile = props.allInOneFile;
-      this.resources = this.resources.filter(function(resource) {
+      this.ramlObj.resources = this.ramlObj.resources.filter(function(resource) {
         return selectedResources.indexOf(resource.displayName) > -1;
       });
 
-      this.selectedResources = this.resources;
+      this.selectedResources = this.ramlObj.resources;
       done();
     }.bind(this));
   },
@@ -251,9 +251,8 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     var writeTemplateToDest = function(resourceName, templateText) {
 
       if (self.generateInOneFile) {
-
         fileContents += templateText;
-        self.log(chalk.cyan('Added ->', resourceName));
+        self.log(chalk.cyan('generated module ->', resourceName));
       } else {
         resourceName = inflect.transform(resourceName, ['underscore', 'dasherize']);
         templateText = fileContents + templateText;
@@ -261,7 +260,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       }
     };
 
-    var appTemplateText = application.generate(moduleName);
+    var appTemplateText = application.generate(moduleName, this.ramlObj);
     var providerTemplateText = provider.generate(moduleName, !this.generateInOneFile);
 
     writeTemplateToDest(moduleName, appTemplateText);
@@ -276,6 +275,9 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       fileContents += ';';
       this.write(moduleName + '.js', fileContents);
     }
+
+    // Clean up
+    fileContents = null;
   }
 });
 

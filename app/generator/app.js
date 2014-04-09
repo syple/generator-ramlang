@@ -16,7 +16,10 @@ module.exports.generate = function(moduleName, ramlObj) {
 
   return _.template(appModuleTemplateText, {
     app: {
-      name: moduleName || 'api'
+      name: moduleName || 'api',
+      baseUri: ramlObj.baseUri,
+      title: ramlObj.title,
+      version: 'v' + ramlObj.version
     }
   });
 };
