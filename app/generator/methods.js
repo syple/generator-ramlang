@@ -1,6 +1,15 @@
 var path = require('path');
 var _ = require('lodash');
+var inflect = require('inflection');
 var generatorUtil = require('./utils');
+var documentation = require('./documentation');
+var endOfLine = require('os').EOL;
+
+var methodTemplatePath = path.resolve(__dirname, '../templates', 'method.js');
+var subResourceTemplatePath = path.resolve(__dirname, '../templates', 'sub-resource.js');
+var methodTemplateText = null;
+var subResourceTemplateText = null;
+var indentAmount = 2;
 
 module.exports = {};
 
@@ -50,6 +59,68 @@ var getApiQueryParametersForMethod = function(method) {
   return '';
 };
 
+var generateMethods = function(ramlResource) {
+  var isCollection = ramlResource.type.toLowerCase() == 'collection';
+  var methodData = [];
+
+  ramlResource.methods.forEach(function(item, index) {
+    var transformedMethodName = isCollection && item.method == 'get' ? 'query' : item.method;
+    methodData.push({
+      description: documentation.formatDescription(item.description, true),
+      factoryMethodName: transformedMethodName,
+      name: inflect.camelize((item.displayName || item.method).replace(' ', '_'), true),
+      queryParameters: getQueryParametersForMethod(transformedMethodName),
+      apiQueryParameters: getApiQueryParametersForMethod(transformedMethodName),
+      separator: index != ramlResource.methods.length - 1 ? ',' : ''
+    });
+  });
+
+  var compiledMethod = _.template(methodTemplateText, {
+    methods: methodData
+  });
+
+  return generatorUtil.indentText(indentAmount, compiledMethod);
+};
+
+var generateSubResource = function(ramlResource) {
+  return _.template(subResourceTemplateText, {
+    resource: {
+      name: ramlResource.relativeUri.replace('/', ''),
+      description: documentation.formatDescription(ramlResource.description, true),
+      methods: generateMethods(ramlResource)
+    }
+  });
+};
+
+var recursResources = function(ramlResource, level) {
+  var compiledResource = "";
+  if (level != 0) {
+    if (ramlResource.type == 'collection') {
+      compiledResource += generateSubResource(ramlResource);
+    } else {
+      compiledResource += generateMethods(ramlResource);
+    }
+
+    compiledResource = generatorUtil.indentText(indentAmount * level, compiledResource);
+  } else {
+    compiledResource = generateMethods(ramlResource);
+  }
+
+  if (ramlResource.resources && ramlResource.resources.length > 0) {
+    ramlResource.resources.forEach(function(resource) {
+      var incrementer = resource.type == 'collection' ? 1 : 0;
+      compiledResource = compiledResource.trim() + ',' + endOfLine + endOfLine;
+      compiledResource += recursResources(resource, level + incrementer);
+
+      if (resource.type == 'collection') {
+        compiledResource += '}';
+      }
+    });
+  }
+
+  return compiledResource;
+};
+
 /**
  * Generates the service methods for the provided RAML resource object
  *
@@ -57,24 +128,9 @@ var getApiQueryParametersForMethod = function(method) {
  * @returns {String} The compiled template string
  */
 module.exports.generate = function(ramlResource) {
-  var templatePath = path.resolve(__dirname, '../templates', 'method.js');
-  var methodTemplateText = generatorUtil.readFileAsString(templatePath);
-  var isCollection = ramlResource.type.toLowerCase() == 'collection';
-  var methodData = [];
-
-  ramlResource.methods.forEach(function(item, index) {
-    var transformedMethodName = isCollection && item.method == 'get' ? 'query' : item.method;
-    methodData.push({
-      description: item.description,
-      factoryMethodName: transformedMethodName,
-      name: item.method,
-      queryParameters: getQueryParametersForMethod(transformedMethodName),
-      apiQueryParameters: getApiQueryParametersForMethod(transformedMethodName),
-      separator: index != ramlResource.methods.length - 1 ? ',' : ''
-    });
-  });
-
-  return _.template(methodTemplateText, {
-    methods: methodData
-  });
+  // Get all of the required templates
+  methodTemplateText = generatorUtil.readFileAsString(methodTemplatePath);
+  subResourceTemplateText = generatorUtil.readFileAsString(subResourceTemplatePath);
+  var compiledTemplate = recursResources(ramlResource, 0);
+  return generatorUtil.indentText(indentAmount, compiledTemplate);
 };

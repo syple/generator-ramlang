@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var inflect = require('inflection');
 
 module.exports = {};
 
@@ -21,4 +22,22 @@ module.exports.stripModuleDeclaration = function(templateText) {
  */
 module.exports.readFileAsString = function(filePath) {
   return fs.readFileSync(path.resolve(filePath), 'utf8');
+};
+
+module.exports.toCamelCase = function(str) {
+  return inflect.camelize(str.replace(' ', '_'), true);
+};
+
+module.exports.getIndent = function(amount) {
+  var indent = '';
+  for (var i = 0; i < amount; i++) {
+    indent += ' ';
+  }
+
+  return indent;
+};
+
+module.exports.indentText = function(amount, text) {
+  var indent = this.getIndent(amount);
+  return indent + text.replace(/^/mg, indent);
 };

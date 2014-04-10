@@ -7,5 +7,7 @@ angular.module('<%= app.name %>')
   var resourceName = '<%= resource.relativeUri %>';
   var expand = 'expand(<%= resource.expand %>)';
 
-  <%= resource.methods %>
+  return {
+<%= resource.methods %>
+  };
 }])
