@@ -24,10 +24,22 @@ module.exports.readFileAsString = function(filePath) {
   return fs.readFileSync(path.resolve(filePath), 'utf8');
 };
 
+/**
+ * Uses inflection to camel case the provided string.
+ *
+ * @param {String} str - The string to camel case.
+ * @returns {String}
+ */
 module.exports.toCamelCase = function(str) {
   return inflect.camelize(str.replace(' ', '_'), true);
 };
 
+/**
+ * Returns a string of spaces.
+ *
+ * @param {Number} amount - The amount of spaces.
+ * @returns {string}
+ */
 module.exports.getIndent = function(amount) {
   var indent = '';
   for (var i = 0; i < amount; i++) {
@@ -37,7 +49,14 @@ module.exports.getIndent = function(amount) {
   return indent;
 };
 
+/**
+ * Indents to provided string value by the provided amount.
+ *
+ * @param {Number} amount - The amount of spaces to indent.
+ * @param {String} text - The paragraph or single line to intent.
+ * @returns {String}
+ */
 module.exports.indentText = function(amount, text) {
   var indent = this.getIndent(amount);
-  return indent + text.replace(/^/mg, indent);
+  return text.replace(/^/mg, indent);
 };

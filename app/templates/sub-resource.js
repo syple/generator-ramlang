@@ -1,5 +1,4 @@
-/**
- * <%= resource.description %>
- */
+
+<%= resource.description %>
 <%= resource.name %>: {
 <%= resource.methods %>

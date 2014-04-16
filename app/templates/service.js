@@ -1,8 +1,6 @@
 angular.module('<%= app.name %>')
 
-/**
- * <%= resource.description %>
- */
+<%= resource.description %>
 .factory('<%= resource.displayName %>', ['Api', function(Api) {
   var resourceName = '<%= resource.relativeUri %>';
   var expand = 'expand(<%= resource.expand %>)';

@@ -59,6 +59,12 @@ var getApiQueryParametersForMethod = function(method) {
   return '';
 };
 
+/**
+ * A helper method for generating RAML resource methods. eg. GET, POST, PUT and DELETE
+ *
+ * @param {Object} ramlResource The RAML resource object to generate the methods for
+ * @returns {String} The compiled template string
+ */
 var generateMethods = function(ramlResource) {
   var isCollection = ramlResource.type.toLowerCase() == 'collection';
   var methodData = [];
@@ -92,6 +98,13 @@ var generateSubResource = function(ramlResource) {
   });
 };
 
+/**
+ * A recursive helper method for generating resources.
+ *
+ * @param {Object} ramlResource - The RAML resource to generate methods and sub resources for.
+ * @param {Number} level - The depth of recursion mainly used for indentation.
+ * @returns {String} The compiled template string.
+ */
 var recursResources = function(ramlResource, level) {
   var compiledResource = "";
   if (level != 0) {
@@ -109,11 +122,12 @@ var recursResources = function(ramlResource, level) {
   if (ramlResource.resources && ramlResource.resources.length > 0) {
     ramlResource.resources.forEach(function(resource) {
       var incrementer = resource.type == 'collection' ? 1 : 0;
-      compiledResource = compiledResource.trim() + ',' + endOfLine + endOfLine;
+      compiledResource = compiledResource.trimRight() + ',' + endOfLine;
       compiledResource += recursResources(resource, level + incrementer);
 
       if (resource.type == 'collection') {
-        compiledResource += '}';
+        compiledResource = compiledResource.trimRight() + endOfLine;
+        compiledResource += generatorUtil.indentText(indentAmount * (level + 1), '}');
       }
     });
   }
@@ -124,7 +138,7 @@ var recursResources = function(ramlResource, level) {
 /**
  * Generates the service methods for the provided RAML resource object
  *
- * @param {Object} ramlResource - The RAML resource object to get the methods it supports
+ * @param {Object} ramlResource - The RAML resource to generate the methods and sub resources for.
  * @returns {String} The compiled template string
  */
 module.exports.generate = function(ramlResource) {
@@ -132,5 +146,6 @@ module.exports.generate = function(ramlResource) {
   methodTemplateText = generatorUtil.readFileAsString(methodTemplatePath);
   subResourceTemplateText = generatorUtil.readFileAsString(subResourceTemplatePath);
   var compiledTemplate = recursResources(ramlResource, 0);
-  return generatorUtil.indentText(indentAmount, compiledTemplate);
+  compiledTemplate = generatorUtil.indentText(indentAmount, compiledTemplate);
+  return compiledTemplate;
 };
