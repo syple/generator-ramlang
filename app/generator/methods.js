@@ -73,8 +73,8 @@ var generateMethods = function(ramlResource) {
     var transformedMethodName = isCollection && item.method == 'get' ? 'query' : item.method;
     methodData.push({
       description: documentation.formatDescription(item.description, true),
-      factoryMethodName: transformedMethodName,
-      name: inflect.camelize((item.displayName || item.method).replace(' ', '_'), true),
+      factoryMethodName: generatorUtil.toCamelCase(item.displayName || transformedMethodName),
+      name: transformedMethodName,
       queryParameters: getQueryParametersForMethod(transformedMethodName),
       apiQueryParameters: getApiQueryParametersForMethod(transformedMethodName),
       separator: index != ramlResource.methods.length - 1 ? ',' : ''
