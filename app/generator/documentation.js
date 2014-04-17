@@ -26,8 +26,10 @@ module.exports.wrapSentence = function(sentence) {
     line += ' ' + word;
   });
 
-  if (line) {
+  if ((line && (line.length / maxSentenceLength) * 100 > 20) || line.length == 1) {
     lines.push(line.trim());
+  } else {
+    lines[lines.length - 1] += line;
   }
 
   return lines;
