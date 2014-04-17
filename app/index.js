@@ -189,10 +189,9 @@ var RamlangGenerator = yeoman.generators.Base.extend({
 
     var done = this.async();
     var prompts = [];
-    var self = this;
 
     // Map all of the resource display names
-    this.allResourceDisplayNames = self.ramlObj.resources.map(function(item) {
+    this.allResourceDisplayNames = this.ramlObj.resources.map(function(item) {
       return item.displayName;
     });
 
@@ -238,7 +237,6 @@ var RamlangGenerator = yeoman.generators.Base.extend({
   generate: function() {
     // Return if there are no resources to process
     if (!this.selectedResources) { return; }
-    var self = this;
     var fileContents = '\'use strict\';\n\n';
     var moduleName = this.apiModuleName + (this.apiModuleName != 'api' ? '-api' : '');
 
@@ -247,28 +245,28 @@ var RamlangGenerator = yeoman.generators.Base.extend({
      * @param {String} resourceName - The name of the resource to use.
      * @param {String} templateText - The template text value to resolve.
      */
-    var writeTemplateToDest = function(resourceName, templateText) {
+    this.writeTemplateToDest = function(resourceName, templateText) {
 
-      if (self.generateInOneFile) {
+      if (this.generateInOneFile) {
         fileContents += templateText;
-        self.log(chalk.cyan('generated module ->', resourceName));
+        this.log(chalk.cyan('generated module ->', resourceName));
       } else {
         resourceName = inflect.transform(resourceName, ['underscore', 'dasherize']);
         templateText = fileContents + templateText;
-        self.write(resourceName + '.js', templateText + ';');
+        this.write(resourceName + '.js', templateText + ';');
       }
     };
 
     var appTemplateText = application.generate(moduleName, this.ramlObj);
     var providerTemplateText = provider.generate(moduleName, !this.generateInOneFile);
 
-    writeTemplateToDest(moduleName, appTemplateText);
-    writeTemplateToDest('api-provider', providerTemplateText);
+    this.writeTemplateToDest(moduleName, appTemplateText);
+    this.writeTemplateToDest('api-provider', providerTemplateText);
 
     this.selectedResources.forEach(function(resource) {
-      var serviceTemplateText = service.generate(moduleName, resource, !self.generateInOneFile);
-      writeTemplateToDest(resource.displayName, serviceTemplateText);
-    });
+      var serviceTemplateText = service.generate(moduleName, resource, !this.generateInOneFile);
+      this.writeTemplateToDest(resource.displayName, serviceTemplateText);
+    }, this);
 
     if (this.generateInOneFile) {
       fileContents += ';';

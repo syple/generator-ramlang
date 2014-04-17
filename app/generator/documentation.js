@@ -43,7 +43,6 @@ module.exports.wrapSentence = function(sentence) {
 module.exports.formatDescription = function(description, isForComments) {
   description = description || '';
   description = description.trim();
-  var self = this;
   var result = '';
   var docPrefix = isForComments ? ' * ' : '';
   var lines = description.trim()
@@ -62,8 +61,8 @@ module.exports.formatDescription = function(description, isForComments) {
   };
 
   lines.forEach(function(line) {
-    append(self.wrapSentence(line));
-  });
+    append(this.wrapSentence(line));
+  }, this);
 
   if (isForComments) {
     result += ' */';
