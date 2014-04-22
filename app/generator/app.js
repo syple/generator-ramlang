@@ -8,7 +8,7 @@ module.exports = {};
  * Generates the angular application module.
  *
  * @param {String} moduleName = The name of the angular module.
- * @param {Object} [ramlObj] The RAML object to get additional details from.
+ * @param {Object} ramlObj The RAML object to get additional details from.
  */
 module.exports.generate = function(moduleName, ramlObj) {
   var templatePath = path.resolve(__dirname, '../templates', 'app.js');
@@ -17,9 +17,8 @@ module.exports.generate = function(moduleName, ramlObj) {
   return _.template(appModuleTemplateText, {
     app: {
       name: moduleName || 'api',
-      baseUri: ramlObj.baseUri,
       title: ramlObj.title,
-      version: 'v' + ramlObj.version
+      version: 'v' + ramlObj.version.replace(/v/i, '')
     }
   });
 };

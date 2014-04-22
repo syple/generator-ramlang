@@ -195,6 +195,12 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       return item.displayName;
     });
 
+    var filesDist = getBowerPath();
+    var message = 'This is where i\'m going to generate the files: \n\n' + filesDist + '\n\n Is this correct';
+    if (filesDist == '' || filesDist == '.') {
+      message = "Should I generate all the files in the current directory";
+    }
+
     if (this.ramlFiles.length > 0) {
       prompts.push({
         type: 'confirm',
@@ -214,6 +220,19 @@ var RamlangGenerator = yeoman.generators.Base.extend({
         name: 'allInOneFile',
         message: 'Should I generate all the resources in one file?',
         default: true
+      }, {
+        type: 'confirm',
+        name: 'filesDistCorrect',
+        message: message,
+        default: true
+      }, {
+        type: 'input',
+        name: 'filesDist',
+        message: 'Supply the correct path:',
+        choices: this.allResourceDisplayNames,
+        when: function(response) {
+          return !response.filesDistCorrect || (!filesDist || filesDist.trim() == '');
+        }
       });
     } else {
       this.log(chalk.red('There needs to be at least one \'.raml\' file in the current working directory.'))
@@ -222,6 +241,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     this.prompt(prompts, function (props) {
       var selectedResources = props.resourcesToGenerate || this.allResourceDisplayNames;
       this.generateInOneFile = props.allInOneFile;
+      this.filesDist = (props.filesDist || filesDist).trim();
       this.ramlObj.resources = this.ramlObj.resources.filter(function(resource) {
         return selectedResources.indexOf(resource.displayName) > -1;
       });
@@ -236,10 +256,18 @@ var RamlangGenerator = yeoman.generators.Base.extend({
    */
   generate: function() {
     // Return if there are no resources to process
-    if (!this.selectedResources) { return; }
+    if (!this.selectedResources) {
+      this.log('No resources to generate');
+      return;
+    }
+    // Return if the user didn't provide a destination path
+    if (!this.filesDist) {
+      this.log('No destination path provided');
+      return;
+    }
+
     var fileContents = '\'use strict\';\n\n';
     var moduleName = this.apiModuleName + (this.apiModuleName != 'api' ? '-api' : '');
-
     /**
      * A helper function to direct the resolved template text into a file or append it to a variable.
      * @param {String} resourceName - The name of the resource to use.
@@ -253,12 +281,12 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       } else {
         resourceName = inflect.transform(resourceName, ['underscore', 'dasherize']);
         templateText = fileContents + templateText;
-        this.write(resourceName + '.js', templateText + ';');
+        this.write(path.join(this.filesDist, resourceName + '.js'), templateText + ';');
       }
     };
 
     var appTemplateText = application.generate(moduleName, this.ramlObj);
-    var providerTemplateText = provider.generate(moduleName, !this.generateInOneFile);
+    var providerTemplateText = provider.generate(moduleName, this.ramlObj, !this.generateInOneFile);
 
     this.writeTemplateToDest(moduleName, appTemplateText);
     this.writeTemplateToDest('api-provider', providerTemplateText);
@@ -270,12 +298,40 @@ var RamlangGenerator = yeoman.generators.Base.extend({
 
     if (this.generateInOneFile) {
       fileContents += ';';
-      this.write(moduleName + '.js', fileContents);
+      this.write(path.join(this.filesDist, moduleName + '.js'), fileContents);
     }
 
     // Clean up
     fileContents = null;
   }
 });
+
+var getBowerPath = function() {
+  var pathStructure = 'scripts/services/api';
+  var appPath = null;
+  var bowerCustomConfPath = './.bowerrc';
+  var bowerContentsFolderName = 'bower_components';
+
+  if (fs.existsSync(bowerCustomConfPath)) {
+    var contents = JSON.parse(fs.readFileSync(bowerCustomConfPath, 'utf-8'));
+    if (contents.directory) {
+      appPath = contents.directory.replace(bowerContentsFolderName, '');
+
+      if (appPath.lastIndexOf('/') == appPath.length - 1) {
+        appPath = appPath.substring(0, appPath.lastIndexOf('/'));
+      }
+    }
+  }
+
+  if (appPath == null && fs.existsSync(path.join('./app', bowerContentsFolderName))) {
+    appPath = 'app';
+  }
+
+  if (appPath == null) {
+    return '.';
+  } else {
+    return path.join(appPath, pathStructure);
+  }
+};
 
 module.exports = RamlangGenerator;

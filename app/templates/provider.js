@@ -16,7 +16,16 @@ angular.module('<%= app.name %>')
   self.setApiBaseUrl = function(url) {
 
     if (angular.isString(url)) {
-      var cleanUrl = url.replace(/[//]+/g, '/');
+      var cleanUrl = angular.copy(url);
+      var match = cleanUrl.match(/(http|https):\/\//i);
+      var httpPrefix = 'http://';
+
+      if (match && match.length > 0) {
+        httpPrefix = match[0];
+      }
+
+      cleanUrl = cleanUrl.replace(httpPrefix, '');
+      cleanUrl = cleanUrl.replace(/\/+/g, '/');
       cleanUrl = cleanUrl.split('/');
 
       // remove all of the last entries if they are empty string.
@@ -24,7 +33,7 @@ angular.module('<%= app.name %>')
         cleanUrl.pop();
       }
 
-      baseApiUrl = cleanUrl.join('/');
+      baseApiUrl = httpPrefix + cleanUrl.join('/');
     }
   };
 
@@ -44,9 +53,9 @@ angular.module('<%= app.name %>')
      *
      * @param {String} type The HTTP verb to use. eg: GET, POST, PUT, DELETE
      * @param {String} resourceName The name of the resource to calls
-     * @param {Number=} id The id of the resource.
-     * @param {String=} query The query string to append.
-     * @param {Object=} data The data to post with the request.
+     * @param {Number=} [id] The id of the resource.
+     * @param {String=} [query] The query string to append.
+     * @param {Object=} [data] The data to post with the request.
      * @returns {*}
      */
     var callApi = function(type, resourceName, id, query, data) {
@@ -60,21 +69,25 @@ angular.module('<%= app.name %>')
     /**
      * Constructs the request url to call using the base api url and resource data provided.
      *
-     * @param {String} resourceName The name of the resource.
-     * @param {Number=} id The id of the resource.
-     * @param {String=} query The query string to append.
+     * @param {String} resourcePath The relative path of the resource.
+     * @param {Number=} [id] The id of the resource.
+     * @param {String=} [query] The query string to append.
      * @returns {string} The complete url to request.
      */
-    var buildUrl = function(resourceName, id, query) {
+    var buildUrl = function(resourcePath, id, query) {
 
-      var url = baseApiUrl + '/';
-      var parts = [resourceName];
+      // If the resource path doesn't start with a '/' then prefix it.
+      if (resourcePath.indexOf('/') != 0) {
+        resourcePath = '/' + resourcePath;
+      }
+
+      var parts = [resourcePath];
 
       if (angular.isDefined(id) && id != null) {
         parts.push(id);
       }
 
-      return url + parts.join('/') + suffix + (query ? query : '');
+      return baseApiUrl + parts.join('/') + suffix + (query ? query : '');
     };
 
     return {
@@ -82,8 +95,8 @@ angular.module('<%= app.name %>')
        * Calls the api with the get http verb.
        *
        * @param {String} resourceName The name of the resource to call.
-       * @param {Number=} id The id of the resource.
-       * @param {String=} query The query string to append.
+       * @param {Number=} [id] The id of the resource.
+       * @param {String=} [query] The query string to append.
        * @returns {Object} The promise object which made the request.
        */
       get: function(resourceName, id, query) {
@@ -98,7 +111,7 @@ angular.module('<%= app.name %>')
        * @param {Object} data The object to post with the request.
        * @returns {Object} The promise object which made the request.
        */
-      create: function(resourceName, data) {
+      post: function(resourceName, data) {
         console.info('going to call resource', resourceName, 'using http verb POST with data', data);
         return callApi('POST', resourceName, null, null, data);
       },
@@ -111,7 +124,7 @@ angular.module('<%= app.name %>')
        * @param {Object} data The object to post with the request.
        * @returns {Object} The promise object which made the request.
        */
-      update: function(resourceName, id, data) {
+      put: function(resourceName, id, data) {
         console.info('going to call resource', resourceName, 'using http verb PUT with data', data, 'and id', id);
         return callApi('PUT', resourceName, id, null, data);
       },
@@ -123,7 +136,7 @@ angular.module('<%= app.name %>')
        * @param {Number=} id The id of the resource.
        * @returns {Object} The promise object which made the request.
        */
-      remove: function(resourceName, id) {
+      delete: function(resourceName, id) {
         console.info('going to call resource', resourceName, 'using http verb DELETE with id', id || 'NONE');
         return callApi('DELETE', resourceName, id);
       }
@@ -132,3 +145,10 @@ angular.module('<%= app.name %>')
 
   return self;
 })
+
+/**
+ * Sets up the api base url
+ */
+.config(['ApiProvider', function(ApiProvider) {
+  ApiProvider.setApiBaseUrl('http://localhost:3000/api');
+}])

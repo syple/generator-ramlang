@@ -21,7 +21,6 @@ module.exports = {};
  * @returns {Object}
  */
 var getParametersForMethod = function(method, relativeUri) {
-
   var result = {
     method: '',
     api: '',
@@ -91,6 +90,15 @@ var getParametersForMethod = function(method, relativeUri) {
 };
 
 /**
+ * Determines if the RAML resource is a collection resource
+ *
+ * @param {Object} ramlResource - THe RAML resource to check
+ */
+var isCollection = function(ramlResource) {
+  return ramlResource.type.toLowerCase() == 'collection';
+};
+
+/**
  * A helper method for generating RAML resource methods. eg. GET, POST, PUT and DELETE
  *
  * @param {Object} ramlResource - The RAML resource object to generate the methods for
@@ -98,16 +106,16 @@ var getParametersForMethod = function(method, relativeUri) {
  * @returns {string} The compiled template string
  */
 var generateMethods = function(ramlResource, relativeUri) {
-  var isCollection = ramlResource.type.toLowerCase() == 'collection';
+  var isCol = isCollection(ramlResource);
   var methodData = [];
 
   ramlResource.methods.forEach(function(item, index) {
-    var transformedMethodName = isCollection && item.method == 'get' ? 'query' : item.method;
+    var transformedMethodName = isCol && item.method == 'get' ? 'query' : item.method;
     var parameters = getParametersForMethod(transformedMethodName, relativeUri);
     methodData.push({
       description: documentation.formatDescription(item.description, true),
       factoryMethodName: generatorUtil.toCamelCase(item.displayName || transformedMethodName),
-      name: transformedMethodName,
+      apiMethodName: item.method,
       queryParameters: parameters.method,
       apiQueryParameters: parameters.api,
       separator: index != ramlResource.methods.length - 1 ? ',' : ''
