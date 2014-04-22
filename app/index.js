@@ -13,12 +13,18 @@ var application = require('./generator/app');
 var provider = require('./generator/provider');
 var service = require('./generator/service');
 
+var configFileName = '.ramlang';
+
 var RamlangGenerator = yeoman.generators.Base.extend({
 
   /**
    * The main function called when the generator is executed.
    */
   init: function () {
+    this.skipQuestions = false;
+    this.shouldSave = this.args.indexOf('save') > -1 || this.args.indexOf('s') > -1;
+    this.shouldClean = this.args.indexOf('clean') > -1 || this.args.indexOf('c') > -1;
+
     /**
      * Gets the list of raml files in the current working directory
      * and populates a variable on the current scope.
@@ -32,10 +38,24 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     this.ramlFiles.push('Custom');
   },
 
+  config: function() {
+    this.config.path = './' + configFileName;
+    this.config.loadConfig();
+    // load up any saved configurations
+    if (fs.existsSync('./' + configFileName) && !this.shouldClean) {
+      this.apiModuleName = this.config.get('apiModuleName');
+      this.ramlFilename = this.config.get('ramlPath');
+      this.selectedResources = this.config.get('selectedResources');
+      this.generateInOneFile = this.config.get('allInOneFile');
+      this.filesDist = this.config.get('destination');
+    }
+  },
+
   /**
    * Prompts the user a series of questions to determine what the generator needs to do.
    */
   initialQuestions: function () {
+
     var done = this.async();
     var self = this;
 
@@ -76,7 +96,6 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     if (this.ramlFiles.length == 2) {
       // There is only one file so just default it.
       this.ramlFilename = this.ramlFiles[0];
-      prompts = [prompt1];
     }
 
     if (this.ramlFiles.length > 2) {
@@ -84,6 +103,14 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     } else {
       delete prompt2.when;
       prompts = [prompt1, prompt3];
+    }
+
+    if (this.ramlFilename != undefined && this.ramlFilename != null) {
+      prompts = [prompt1];
+    }
+
+    if (this.apiModuleName != undefined && this.apiModuleName != null) {
+      prompts.shift(); // remove the first prompt
     }
 
     this.prompt(prompts, function (props) {
@@ -119,6 +146,12 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     }, 250);
 
     var endFn = function() {
+
+      if (self.selectedResources) {
+        self.ramlObj.resources = filterResources(self.selectedResources, self.ramlObj.resources);
+        self.selectedResourceObjs = self.ramlObj.resources;
+      }
+
       clearInterval(progressInterval);
       done();
     };
@@ -143,7 +176,6 @@ var RamlangGenerator = yeoman.generators.Base.extend({
 
     if (isUri) {
       var requester = isHttp ? http : https;
-      this.ramlFilename = this.ramlFilename;
 
       // Remove
       var saveFilePath = this.ramlFilename;
@@ -202,12 +234,14 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     }
 
     if (this.ramlFiles.length > 0) {
-      prompts.push({
+      var prompt1 = {
         type: 'confirm',
         name: 'shouldGenAllResources',
         message: 'Would you like to generate all resources?',
         default: true
-      }, {
+      };
+
+      var prompt2 = {
         type: 'checkbox',
         name: 'resourcesToGenerate',
         message: 'Select which resources you want to generate:',
@@ -215,17 +249,23 @@ var RamlangGenerator = yeoman.generators.Base.extend({
         when: function(response) {
           return !response.shouldGenAllResources
         }
-      }, {
+      };
+
+      var prompt3 = {
         type: 'confirm',
         name: 'allInOneFile',
         message: 'Should I generate all the resources in one file?',
         default: true
-      }, {
+      };
+
+      var prompt4 = {
         type: 'confirm',
         name: 'filesDistCorrect',
         message: message,
         default: true
-      }, {
+      };
+
+      var prompt5 = {
         type: 'input',
         name: 'filesDist',
         message: 'Supply the correct path:',
@@ -233,20 +273,31 @@ var RamlangGenerator = yeoman.generators.Base.extend({
         when: function(response) {
           return !response.filesDistCorrect || (!filesDist || filesDist.trim() == '');
         }
-      });
+      };
+
+      if (this.selectedResources == undefined || this.selectedResources == null) {
+        prompts.push(prompt1);
+        prompts.push(prompt2);
+      }
+
+      if (this.generateInOneFile == undefined || this.generateInOneFile == null) {
+        prompts.push(prompt3)
+      }
+
+      if (this.filesDist == undefined || this.filesDist == null) {
+        prompts.push(prompt4);
+        prompts.push(prompt5);
+      }
     } else {
       this.log(chalk.red('There needs to be at least one \'.raml\' file in the current working directory.'))
     }
 
     this.prompt(prompts, function (props) {
-      var selectedResources = props.resourcesToGenerate || this.allResourceDisplayNames;
+      this.selectedResources = props.resourcesToGenerate || this.allResourceDisplayNames;
       this.generateInOneFile = props.allInOneFile;
       this.filesDist = (props.filesDist || filesDist).trim();
-      this.ramlObj.resources = this.ramlObj.resources.filter(function(resource) {
-        return selectedResources.indexOf(resource.displayName) > -1;
-      });
-
-      this.selectedResources = this.ramlObj.resources;
+      this.ramlObj.resources = filterResources(this.selectedResources, this.ramlObj.resources);
+      this.selectedResourceObjs = this.ramlObj.resources;
       done();
     }.bind(this));
   },
@@ -256,7 +307,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
    */
   generate: function() {
     // Return if there are no resources to process
-    if (!this.selectedResources) {
+    if (!this.selectedResourceObjs) {
       this.log('No resources to generate');
       return;
     }
@@ -291,7 +342,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     this.writeTemplateToDest(moduleName, appTemplateText);
     this.writeTemplateToDest('api-provider', providerTemplateText);
 
-    this.selectedResources.forEach(function(resource) {
+    this.selectedResourceObjs.forEach(function(resource) {
       var serviceTemplateText = service.generate(moduleName, resource, !this.generateInOneFile);
       this.writeTemplateToDest(resource.displayName, serviceTemplateText);
     }, this);
@@ -303,6 +354,22 @@ var RamlangGenerator = yeoman.generators.Base.extend({
 
     // Clean up
     fileContents = null;
+  },
+
+  /**
+   * Finally, if the user supplied the argument '--save' then save the users selections to a file.
+   */
+  end: function() {
+
+    if (this.shouldSave) {
+
+      this.config.set('apiModuleName', this.apiModuleName);
+      this.config.set('ramlPath', this.ramlFilename);
+      this.config.set('selectedResources', this.selectedResources);
+      this.config.set('allInOneFile', this.generateInOneFile);
+      this.config.set('destination', this.filesDist);
+      this.config.forceSave();
+    }
   }
 });
 
@@ -332,6 +399,12 @@ var getBowerPath = function() {
   } else {
     return path.join(appPath, pathStructure);
   }
+};
+
+var filterResources = function(selectedResourceNames, resources) {
+  return resources.filter(function(resource) {
+    return selectedResourceNames.indexOf(resource.displayName) > -1;
+  });
 };
 
 module.exports = RamlangGenerator;
