@@ -60,13 +60,6 @@ var RamlangGenerator = yeoman.generators.Base.extend({
 
     var done = this.async();
     var self = this;
-
-    // have Yeoman greet the user
-    //this.log(this.yeoman);
-
-    // replace it with a short and sweet description of your generator
-    this.log(chalk.magenta('You\'re using the fantastic Ramlang generator.'));
-
     var prompts = [];
     var prompt1 = {
       type: 'input',
@@ -326,6 +319,8 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       this.log('No destination path provided');
       return;
     }
+
+    this.conflicter.force = true;
 
     var fileContents = '\'use strict\';\n\n';
     var moduleName = this.apiModuleName + (this.apiModuleName != 'api' ? '-api' : '');
