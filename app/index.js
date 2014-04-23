@@ -21,7 +21,6 @@ var RamlangGenerator = yeoman.generators.Base.extend({
    * The main function called when the generator is executed.
    */
   init: function () {
-    this.skipQuestions = false;
     this.shouldSave = this.args.indexOf('save') > -1 || this.args.indexOf('s') > -1;
     this.shouldClean = this.args.indexOf('clean') > -1 || this.args.indexOf('c') > -1;
 
@@ -39,10 +38,12 @@ var RamlangGenerator = yeoman.generators.Base.extend({
   },
 
   config: function() {
+    // Initialise the yeoman config for this generator
     this.config.path = './' + configFileName;
     this.config.loadConfig();
+
     // load up any saved configurations
-    if (fs.existsSync('./' + configFileName) && !this.shouldClean) {
+    if (this.config.existed && !this.shouldClean) {
       this.apiModuleName = this.config.get('apiModuleName');
       this.ramlFilename = this.config.get('ramlPath');
       this.selectedResources = this.config.get('selectedResources');
@@ -113,12 +114,16 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       prompts.shift(); // remove the first prompt
     }
 
-    this.prompt(prompts, function (props) {
-      this.ramlFilename = props.ramlFilename || this.ramlFilename;
-      this.apiModuleName = props.apiModuleName;
+    if (prompts.length > 0) {
+      this.prompt(prompts, function (props) {
+        this.ramlFilename = props.ramlFilename || this.ramlFilename;
+        this.apiModuleName = props.apiModuleName;
 
+        done();
+      }.bind(this));
+    } else {
       done();
-    }.bind(this));
+    }
   },
 
   /**
@@ -227,7 +232,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       return item.displayName;
     });
 
-    var filesDist = getBowerPath();
+    var filesDist = this.filesDist || getBowerPath();
     var message = 'This is where i\'m going to generate the files: \n\n' + filesDist + '\n\n Is this correct';
     if (filesDist == '' || filesDist == '.') {
       message = "Should I generate all the files in the current directory";
@@ -292,14 +297,18 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       this.log(chalk.red('There needs to be at least one \'.raml\' file in the current working directory.'))
     }
 
-    this.prompt(prompts, function (props) {
-      this.selectedResources = props.resourcesToGenerate || this.allResourceDisplayNames;
-      this.generateInOneFile = props.allInOneFile;
-      this.filesDist = (props.filesDist || filesDist).trim();
-      this.ramlObj.resources = filterResources(this.selectedResources, this.ramlObj.resources);
-      this.selectedResourceObjs = this.ramlObj.resources;
+    if (prompts.length > 0) {
+      this.prompt(prompts, function (props) {
+        this.selectedResources = props.resourcesToGenerate || this.allResourceDisplayNames;
+        this.generateInOneFile = props.allInOneFile;
+        this.filesDist = (props.filesDist || filesDist).trim();
+        this.ramlObj.resources = filterResources(this.selectedResources, this.ramlObj.resources);
+        this.selectedResourceObjs = this.ramlObj.resources;
+        done();
+      }.bind(this));
+    } else {
       done();
-    }.bind(this));
+    }
   },
 
   /**
