@@ -1,9 +1,10 @@
 var path = require('path');
 var _ = require('lodash');
 var inflect = require('inflection');
+var endOfLine = require('os').EOL;
+
 var generatorUtil = require('./utils');
 var documentation = require('./documentation');
-var endOfLine = require('os').EOL;
 
 var methodTemplatePath = path.resolve(__dirname, '../templates', 'method.js');
 var subResourceTemplatePath = path.resolve(__dirname, '../templates', 'sub-resource.js');
@@ -48,9 +49,20 @@ var getParametersForMethod = function(method, relativeUri) {
       // If the segment is not an if parameter then just add it to the uri segments
       uriSegments.push('/' + segment);
 
+      var getArgName = function(segment, count) {
+        count = count || 0;
+        var result = inflect.singularize(segment) + (count > 0 ? count : '') + 'Id';
+
+        if (params.indexOf(result) != -1) {
+          return getArgName(segment, count + 1)
+        }
+
+        return result;
+      };
+
       // Only add an id parameter if it's not the last resource in the uri.
       if (index < segments.length - 2) {
-        params.push(inflect.singularize(segment) + 'Id');
+        params.push(getArgName(segment));
       }
     }
   });
@@ -149,8 +161,8 @@ var generateSubResource = function(ramlResource, relativeUri) {
 /**
  * A recursive helper method for generating resources.
  *
- * @param {Object} ramlResource - The RAML resource to generate methods and sub resources for.
- * @param {Number} level - The depth of recursion mainly used for indentation.
+ * @param {Object} ramlResource - The RAML resource to generate methods and sub resources for
+ * @param {Number} level - The depth of recursion mainly used for indentation
  * @param {string} relativeUri - The uri of the resource
  * @returns {string} The compiled template string.
  */
@@ -158,7 +170,7 @@ var recursResources = function(ramlResource, level, relativeUri) {
   var compiledResource = "";
   var uri = relativeUri + ramlResource.relativeUri;
   if (level != 0) {
-    if (ramlResource.type == 'collection') {
+    if (isCollection(ramlResource) || ramlResource.relativeUri != '/{id}') {
       compiledResource += generateSubResource(ramlResource, uri);
     } else {
       compiledResource += generateMethods(ramlResource, uri);
@@ -171,11 +183,12 @@ var recursResources = function(ramlResource, level, relativeUri) {
 
   if (ramlResource.resources && ramlResource.resources.length > 0) {
     ramlResource.resources.forEach(function(resource) {
-      var incrementer = resource.type == 'collection' ? 1 : 0;
+      var isCol = isCollection(resource) || resource.relativeUri != '/{id}';
+      var incrementer = isCol ? 1 : 0;
       compiledResource = compiledResource.trimRight() + ',' + endOfLine;
       compiledResource += recursResources(resource, level + incrementer, uri);
 
-      if (resource.type == 'collection') {
+      if (isCol) {
         compiledResource = compiledResource.trimRight() + endOfLine;
         compiledResource += generatorUtil.indentText(indentAmount * (level + 1), '}');
       }
@@ -188,7 +201,7 @@ var recursResources = function(ramlResource, level, relativeUri) {
 /**
  * Generates the service methods for the provided RAML resource object
  *
- * @param {Object} ramlResource - The RAML resource to generate the methods and sub resources for.
+ * @param {Object} ramlResource - The RAML resource to generate the methods and sub resources for
  * @returns {string} The compiled template string
  */
 module.exports.generate = function(ramlResource) {

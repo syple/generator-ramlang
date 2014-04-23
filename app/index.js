@@ -147,9 +147,9 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     util.print(chalk.blue('Reading RAML file'));
 
     var progressInterval = setInterval(function() {
-      util.print(chalk.cyan('.'));
+      util.print('.');
       didManageToPrintADot = true;
-    }, 250);
+    }, 100);
 
     var endFn = function() {
 
@@ -166,7 +166,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       ramlParser.loadFile(self.ramlFilename).then(function(data) {
 
         if (didManageToPrintADot) {
-          self.log(chalk.blue('Done'));
+          self.log.ok();
         } else {
           self.log('');
         }
@@ -339,7 +339,6 @@ var RamlangGenerator = yeoman.generators.Base.extend({
 
       if (this.generateInOneFile) {
         fileContents += templateText;
-        this.log(chalk.cyan('generated module ->', resourceName));
       } else {
         resourceName = inflect.transform(resourceName, ['underscore', 'dasherize']);
         templateText = fileContents + templateText;

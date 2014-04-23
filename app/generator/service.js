@@ -1,6 +1,9 @@
 var path = require('path');
 var _ = require('lodash');
+var chalk = require('chalk');
 var inflect = require('inflection');
+var log = require('yeoman-generator/lib/util/log')();
+
 var generatorUtil = require('./utils');
 var documentation = require('./documentation');
 var methods = require('./methods');
@@ -31,6 +34,8 @@ module.exports.generate = function(moduleName, ramlResourceObj, withModule) {
   if (!withModule) {
     resolvedTemplate = generatorUtil.stripModuleDeclaration(resolvedTemplate);
   }
+
+  log.ok(ramlResourceObj.displayName);
 
   return resolvedTemplate;
 };
