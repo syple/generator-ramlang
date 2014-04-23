@@ -107,7 +107,7 @@ var getParametersForMethod = function(method, relativeUri) {
  * @param {Object} ramlResource - THe RAML resource to check
  */
 var isCollection = function(ramlResource) {
-  return ramlResource.type.toLowerCase() == 'collection';
+  return (ramlResource.type || '').toLowerCase() == 'collection';
 };
 
 /**
@@ -121,7 +121,7 @@ var generateMethods = function(ramlResource, relativeUri) {
   var isCol = isCollection(ramlResource);
   var methodData = [];
 
-  ramlResource.methods.forEach(function(item, index) {
+  (ramlResource.methods || []).forEach(function(item, index) {
     var transformedMethodName = isCol && item.method == 'get' ? 'query' : item.method;
     var parameters = getParametersForMethod(transformedMethodName, relativeUri);
     methodData.push({
@@ -149,6 +149,11 @@ var generateMethods = function(ramlResource, relativeUri) {
  * @returns {string} The compiled sub resource
  */
 var generateSubResource = function(ramlResource, relativeUri) {
+
+  if ((ramlResource.methods || []).length == 0) {
+    return '';
+  }
+
   return _.template(subResourceTemplateText, {
     resource: {
       name: ramlResource.relativeUri.replace('/', ''),
@@ -185,12 +190,22 @@ var recursResources = function(ramlResource, level, relativeUri) {
     ramlResource.resources.forEach(function(resource) {
       var isCol = isCollection(resource) || resource.relativeUri != '/{id}';
       var incrementer = isCol ? 1 : 0;
-      compiledResource = compiledResource.trimRight() + ',' + endOfLine;
-      compiledResource += recursResources(resource, level + incrementer, uri);
+      var recursResult = recursResources(resource, level + incrementer, uri).trimRight();
 
-      if (isCol) {
-        compiledResource = compiledResource.trimRight() + endOfLine;
-        compiledResource += generatorUtil.indentText(indentAmount * (level + 1), '}');
+      if (recursResult != '') {
+        compiledResource = compiledResource.trimRight();
+
+        if (compiledResource != '') {
+          compiledResource += ',' + endOfLine;
+        }
+
+        compiledResource += recursResult;
+
+        if (isCol) {
+
+          compiledResource += endOfLine;
+          compiledResource += generatorUtil.indentText(indentAmount * (level + 1), '}');
+        }
       }
     });
   }
