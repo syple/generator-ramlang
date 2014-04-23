@@ -13,8 +13,6 @@ var application = require('./generator/app');
 var provider = require('./generator/provider');
 var service = require('./generator/service');
 
-var configFileName = '.ramlang';
-
 var RamlangGenerator = yeoman.generators.Base.extend({
 
   /**
@@ -37,12 +35,15 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     this.ramlFiles.push('Custom');
   },
 
+  /**
+   * Loads the config file if there is one.
+   */
   config: function() {
     // Initialise the yeoman config for this generator
-    this.config.path = './' + configFileName;
+    this.config.path = './.ramlang';
     this.config.loadConfig();
 
-    // load up any saved configurations
+    // load up any saved configurations if the user hasn't provided the 'clean' argument
     if (this.config.existed && !this.shouldClean) {
       this.apiModuleName = this.config.get('apiModuleName');
       this.ramlFilename = this.config.get('ramlPath');
@@ -78,7 +79,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     var prompt2 = {
       type: 'list',
       name: 'ramlFilename',
-      message: 'Which RAML file would you like to use?',
+      message: 'Which RAML file would you like to use',
       choices: this.ramlFiles
     };
     var prompt3 = {
@@ -153,8 +154,8 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     var endFn = function() {
 
       if (self.selectedResources) {
-        self.ramlObj.resources = filterResources(self.selectedResources, self.ramlObj.resources);
-        self.selectedResourceObjs = self.ramlObj.resources;
+        self.ramlSchemaObj.resources = filterResources(self.selectedResources, self.ramlSchemaObj.resources);
+        self.selectedResourceObjs = self.ramlSchemaObj.resources;
       }
 
       clearInterval(progressInterval);
@@ -170,7 +171,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
           self.log('');
         }
 
-        self.ramlObj = data;
+        self.ramlSchemaObj = data;
         endFn();
       }, function(error) {
         self.log('');
@@ -222,27 +223,27 @@ var RamlangGenerator = yeoman.generators.Base.extend({
    */
   finalQuestions: function() {
     // Return if there are no resources to process
-    if (!this.ramlObj.resources) { return; }
+    if (!this.ramlSchemaObj.resources) { return; }
 
     var done = this.async();
     var prompts = [];
 
     // Map all of the resource display names
-    this.allResourceDisplayNames = this.ramlObj.resources.map(function(item) {
+    this.allResourceDisplayNames = this.ramlSchemaObj.resources.map(function(item) {
       return item.displayName;
     });
 
-    var filesDist = this.filesDist || getBowerPath();
+    var filesDist = this.filesDist || getDistPath();
     var message = 'This is where i\'m going to generate the files: \n\n' + filesDist + '\n\n Is this correct';
     if (filesDist == '' || filesDist == '.') {
-      message = "Should I generate all the files in the current directory";
+      message = "Should I generate all the files in the current directory?";
     }
 
     if (this.ramlFiles.length > 0) {
       var prompt1 = {
         type: 'confirm',
         name: 'shouldGenAllResources',
-        message: 'Would you like to generate all resources?',
+        message: 'Would you like to generate all resources',
         default: true
       };
 
@@ -259,7 +260,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       var prompt3 = {
         type: 'confirm',
         name: 'allInOneFile',
-        message: 'Should I generate all the resources in one file?',
+        message: 'Should I generate all the resources in one file',
         default: true
       };
 
@@ -302,8 +303,8 @@ var RamlangGenerator = yeoman.generators.Base.extend({
         this.selectedResources = props.resourcesToGenerate || this.allResourceDisplayNames;
         this.generateInOneFile = props.allInOneFile;
         this.filesDist = (props.filesDist || filesDist).trim();
-        this.ramlObj.resources = filterResources(this.selectedResources, this.ramlObj.resources);
-        this.selectedResourceObjs = this.ramlObj.resources;
+        this.ramlSchemaObj.resources = filterResources(this.selectedResources, this.ramlSchemaObj.resources);
+        this.selectedResourceObjs = this.ramlSchemaObj.resources;
         done();
       }.bind(this));
     } else {
@@ -328,6 +329,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
 
     var fileContents = '\'use strict\';\n\n';
     var moduleName = this.apiModuleName + (this.apiModuleName != 'api' ? '-api' : '');
+
     /**
      * A helper function to direct the resolved template text into a file or append it to a variable.
      * @param {String} resourceName - The name of the resource to use.
@@ -345,8 +347,8 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       }
     };
 
-    var appTemplateText = application.generate(moduleName, this.ramlObj);
-    var providerTemplateText = provider.generate(moduleName, this.ramlObj, !this.generateInOneFile);
+    var appTemplateText = application.generate(moduleName, this.ramlSchemaObj);
+    var providerTemplateText = provider.generate(moduleName, this.ramlSchemaObj, !this.generateInOneFile);
 
     this.writeTemplateToDest(moduleName, appTemplateText);
     this.writeTemplateToDest('api-provider', providerTemplateText);
@@ -366,7 +368,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
   },
 
   /**
-   * Finally, if the user supplied the argument '--save' then save the users selections to a file.
+   * Finally, if the user supplied the argument 'save' then save the users selections to a file.
    */
   end: function() {
 
@@ -382,14 +384,23 @@ var RamlangGenerator = yeoman.generators.Base.extend({
   }
 });
 
-var getBowerPath = function() {
+/**
+ * Returns the path where the generator should save the files.
+ * It will determine if the user is using Bower and return a parent path to where the Bower components are.
+ * If Bower is used then first it will try an get the directory path from the '.bowerrc' file. If that doesn't exist
+ * then it will check if the bower components are in the default location (app/bower_components). If that doesn't exist
+ * then the current path will be returned.
+ *
+ * @returns {String} - The path where the files should be saved.
+ */
+var getDistPath = function() {
   var pathStructure = 'scripts/services/api';
   var appPath = null;
   var bowerCustomConfPath = './.bowerrc';
   var bowerContentsFolderName = 'bower_components';
 
   if (fs.existsSync(bowerCustomConfPath)) {
-    var contents = JSON.parse(fs.readFileSync(bowerCustomConfPath, 'utf-8'));
+    var contents = readJSONFile(bowerCustomConfPath, true);
     if (contents.directory) {
       appPath = contents.directory.replace(bowerContentsFolderName, '');
 
@@ -410,10 +421,34 @@ var getBowerPath = function() {
   }
 };
 
+/**
+ * Removes resources that where not selected.
+ *
+ * @param {[String]} selectedResourceNames - The list of selected resources to filter by.
+ * @param {[Object]} resources - The list of resources to filter.
+ * @returns {[Object]} The filtered list of RAML resources.
+ */
 var filterResources = function(selectedResourceNames, resources) {
   return resources.filter(function(resource) {
     return selectedResourceNames.indexOf(resource.displayName) > -1;
   });
+};
+
+/**
+ * A helper method for reading a json file and returning the contents as string or an object.
+ *
+ * @param {String} path - The path of the file to read.
+ * @param {Boolean} returnAsObj - True to return the contents of the file as an object,
+ *                                otherwise false to return as string.
+ * @returns {String|Object}
+ */
+var readJSONFile = function(path, returnAsObj) {
+  var jsonString = fs.readFileSync(path, 'utf-8');
+  if (returnAsObj) {
+    return JSON.parse(jsonString);
+  } else {
+    return jsonString;
+  }
 };
 
 module.exports = RamlangGenerator;
