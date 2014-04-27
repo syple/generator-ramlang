@@ -229,7 +229,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     var filesDist = this.filesDist || getDistPath();
     var message = 'This is where i\'m going to generate the files: \n\n' + filesDist + '\n\n Is this correct';
     if (filesDist == '' || filesDist == '.') {
-      message = "Should I generate all the files in the current directory?";
+      message = "Generate all files in the current directory";
     }
 
     if (this.ramlFiles.length > 0) {

@@ -144,11 +144,11 @@ angular.module('<%= app.name %>')
   }];
 
   return self;
-})
+})<% if (!_.isUndefined(app.baseUri) && !_.isNull(app.baseUri)) { %>
 
 /**
- * Sets up the api base url
+ * Sets up the api base url.
  */
 .config(['ApiProvider', function(ApiProvider) {
-  ApiProvider.setApiBaseUrl('http://localhost:3000/api');
-}])
+  ApiProvider.setApiBaseUrl('<%= app.baseUri %>');
+}])<% } %>
