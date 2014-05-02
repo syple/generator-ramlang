@@ -147,8 +147,8 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     var endFn = function() {
 
       if (self.selectedResources) {
-        self.ramlSchemaObj.resources = filterResources(self.selectedResources, self.ramlSchemaObj.resources);
-        self.selectedResourceObjs = self.ramlSchemaObj.resources;
+        self.ramlSpecObj.resources = filterResources(self.selectedResources, self.ramlSpecObj.resources);
+        self.selectedResourceObjs = self.ramlSpecObj.resources;
       }
 
       clearInterval(progressInterval);
@@ -156,21 +156,21 @@ var RamlangGenerator = yeoman.generators.Base.extend({
     };
 
     var loadRaml = function() {
-      ramlParser.loadFile(self.ramlFilename).then(function(data) {
+      ramlParser.loadFile(self.ramlFilename)
+        .then(function(data) {
 
-        if (didManageToPrintADot) {
-          self.log.ok();
-        } else {
+          if (didManageToPrintADot) {
+            self.log.ok();
+          } else {
+            self.log('');
+          }
+
+          self.ramlSpecObj = data;
+        }, function(error) {
           self.log('');
-        }
-
-        self.ramlSchemaObj = data;
-        endFn();
-      }, function(error) {
-        self.log('');
-        self.log(chalk.red('Failed to read RAML file: ' + error));
-        endFn();
-      });
+          self.log(chalk.red('Failed to read RAML file: ' + error));
+        })
+        .finally(endFn);
     };
 
     if (isUri) {
@@ -202,9 +202,7 @@ var RamlangGenerator = yeoman.generators.Base.extend({
         self.log('');
         self.log(chalk.red('Failed to download RAML file: ' + error));
 
-        file.close(function() {
-          endFn();
-        });
+        file.close(endFn);
       });
     } else {
       loadRaml();
@@ -216,13 +214,13 @@ var RamlangGenerator = yeoman.generators.Base.extend({
    */
   finalQuestions: function() {
     // Return if there are no resources to process
-    if (!this.ramlSchemaObj.resources) { return; }
+    if (!this.ramlSpecObj.resources) { return; }
 
     var done = this.async();
     var prompts = [];
 
     // Map all of the resource display names
-    this.allResourceDisplayNames = this.ramlSchemaObj.resources.map(function(item) {
+    this.allResourceDisplayNames = this.ramlSpecObj.resources.map(function(item) {
       return item.displayName;
     });
 
@@ -296,8 +294,8 @@ var RamlangGenerator = yeoman.generators.Base.extend({
         this.selectedResources = props.resourcesToGenerate || this.allResourceDisplayNames;
         this.generateInOneFile = props.allInOneFile;
         this.filesDist = (props.filesDist || filesDist).trim();
-        this.ramlSchemaObj.resources = filterResources(this.selectedResources, this.ramlSchemaObj.resources);
-        this.selectedResourceObjs = this.ramlSchemaObj.resources;
+        this.ramlSpecObj.resources = filterResources(this.selectedResources, this.ramlSpecObj.resources);
+        this.selectedResourceObjs = this.ramlSpecObj.resources;
         done();
       }.bind(this));
     } else {
@@ -341,8 +339,8 @@ var RamlangGenerator = yeoman.generators.Base.extend({
       }
     };
 
-    var appTemplateText = application.generate(moduleName, this.ramlSchemaObj);
-    var providerTemplateText = provider.generate(moduleName, this.ramlSchemaObj, !this.generateInOneFile);
+    var appTemplateText = application.generate(moduleName, this.ramlSpecObj);
+    var providerTemplateText = provider.generate(moduleName, this.ramlSpecObj, !this.generateInOneFile);
 
     this.writeTemplateToDest(moduleName, appTemplateText);
     this.writeTemplateToDest('api-provider', providerTemplateText);

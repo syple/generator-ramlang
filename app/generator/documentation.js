@@ -1,4 +1,8 @@
 var linewrap = require('linewrap');
+var markdown = require('markdown').markdown;
+var Entities = require('html-entities').AllHtmlEntities;
+
+var entities = new Entities();
 var wrap = linewrap(110, {
   lineBreak: [/\n|<br ?\/>/, '\n'],
   respectLineBreaks: 'multi',
@@ -15,13 +19,33 @@ module.exports = {};
  * @returns {string} The formatted string
  */
 module.exports.formatDescription = function(description, isForComments) {
-  var wrappedDescription = wrap(description || '').trim();
+
+  var finalDescription = markdown.toHTML(description || '');
+
+  // Decode and html left over
+  finalDescription = entities.decode(finalDescription);
+
+  // Strip HTML tags
+  finalDescription = stripHTML(finalDescription);
+
+  // Wrap description
+  finalDescription = wrap(finalDescription).trim();
 
   if (isForComments) {
-    wrappedDescription = wrappedDescription.replace(/^/mg, ' * ');
-    wrappedDescription = '/**\n' + wrappedDescription;
-    wrappedDescription += '\n */';
+    finalDescription = finalDescription.replace(/^/mg, ' * ');
+    finalDescription = '/**\n' + finalDescription;
+    finalDescription += '\n */';
   }
 
-  return wrappedDescription;
+  return finalDescription;
+};
+
+/**
+ * Removes any HTML tags from the provided string.
+ *
+ * @param {String} str - The string value to remove the HTML tags from.
+ * @returns {String}
+ */
+var stripHTML = function(str) {
+  return str.replace(/(<([^>]+)>)/ig,"");
 };
