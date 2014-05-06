@@ -18,7 +18,7 @@ module.exports = {};
  * @param {Boolean} withModule - True to generate with the angular module declaration, otherwise false.
  */
 module.exports.generate = function(moduleName, ramlResourceObj, withModule) {
-  var templatePath = path.resolve(__dirname, '../templates', 'service.js');
+  var templatePath = path.resolve(__dirname, '../app/templates', 'service.js');
   var appModuleTemplateText = generatorUtil.readFileAsString(templatePath);
   ramlResourceObj.displayName = inflect.singularize(ramlResourceObj.displayName).replace(' ', '') + 'Api';
   ramlResourceObj.description = documentation.formatDescription(ramlResourceObj.description, true);

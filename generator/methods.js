@@ -6,8 +6,8 @@ var endOfLine = require('os').EOL;
 var generatorUtil = require('./utils');
 var documentation = require('./documentation');
 
-var methodTemplatePath = path.resolve(__dirname, '../templates', 'method.js');
-var subResourceTemplatePath = path.resolve(__dirname, '../templates', 'sub-resource.js');
+var methodTemplatePath = path.resolve(__dirname, '../app/templates', 'method.js');
+var subResourceTemplatePath = path.resolve(__dirname, '../app/templates', 'sub-resource.js');
 var methodTemplateText = null;
 var subResourceTemplateText = null;
 var indentAmount = 2;

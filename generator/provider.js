@@ -12,7 +12,7 @@ module.exports = {};
  * @param {Boolean} withModule - True to generate with the angular module declaration, otherwise false.
  */
 module.exports.generate = function(moduleName, ramlObj, withModule) {
-  var templatePath = path.resolve(__dirname, '../templates', 'provider.js');
+  var templatePath = path.resolve(__dirname, '../app/templates', 'provider.js');
   var appModuleTemplateText = generatorUtil.readFileAsString(templatePath);
   var resolvedTemplate = _.template(appModuleTemplateText, {
     app: {

@@ -11,7 +11,7 @@ module.exports = {};
  * @param {Object} ramlObj The RAML object to get additional details from.
  */
 module.exports.generate = function(moduleName, ramlObj) {
-  var templatePath = path.resolve(__dirname, '../templates', 'app.js');
+  var templatePath = path.resolve(__dirname, '../app/templates', 'app.js');
   var appModuleTemplateText = generatorUtil.readFileAsString(templatePath);
 
   return _.template(appModuleTemplateText, {
