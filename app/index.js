@@ -1,25 +1,27 @@
 'use strict';
-var http = require('http');
-var https = require('https');
-var util = require('util');
-var path = require('path');
-var yeoman = require('yeoman-generator');
-var chalk = require('chalk');
-var ramlParser = require('raml-parser');
-var fs = require('fs');
-var inflect = require('inflection');
+var http        = require('http');
+var https       = require('https');
+var util        = require('util');
+var path        = require('path');
+var yeoman      = require('yeoman-generator');
+var chalk       = require('chalk');
+var ramlParser  = require('raml-parser');
+var fs          = require('fs');
+var inflect     = require('inflection');
 
-var utils = require('./utils');
+var utils       = require('./utils');
 var application = require('../generator/app');
-var provider = require('../generator/provider');
-var service = require('../generator/service');
+var provider    = require('../generator/provider');
+var service     = require('../generator/service');
+
+var pathRegex = /[\|&;\$%@"<>\(\)\+,]/g;
 
 var Generator = module.exports = function Generator(args, options) {
   yeoman.generators.Base.apply(this, arguments);
 
   // Register options
   this.option('save', {
-    desc: 'Stores the all the answers to a file.',
+    desc: 'Stores all answers to a file.',
     required: false
   });
 
@@ -29,7 +31,12 @@ var Generator = module.exports = function Generator(args, options) {
   });
 
   this.option('force', {
-    desc: 'If provided then when saving files, prompts will be suppressed',
+    desc: 'Suppresses prompting when saving files.',
+    required: false
+  });
+
+  this.option('welcome-off', {
+    desc: 'Doesn\'t display the welcome message.',
     required: false
   });
 
@@ -65,6 +72,24 @@ Generator.prototype.config = function() {
     this.options.force      = this.config.get('force');
   }
 };
+/**
+ * Prints the welcome message.
+ */
+Generator.prototype.welcome = function() {
+
+  // Don't display the welcome message if the option is provided.
+  if (this.options['welcome-off'] == true) { return; }
+
+  var ramlang ="\n" +
+    chalk.cyan("-----       /\\      |\\    /|   |        ") + chalk.red("   /\\      |\\   |    /---+ \n") +
+    chalk.cyan("     |     /  \\     | \\  / |   |        ") + chalk.red("  /  \\     | \\  |   |      \n") +
+    chalk.cyan("  ---     / -- \\    |  \\/  |   |        ") + chalk.red(" / -- \\    |  \\ |   |  --| \n") +
+    chalk.cyan("     \\   /      \\   |      |   |_____   ") + chalk.red("/      \\   |   \\|   +---/  \n");
+
+  this.log(ramlang);
+
+  this.log("Welcome to RAMLang!!!\n");
+};
 
 /**
  * Prompts the user a series of questions to determine what the generator needs to do.
@@ -79,7 +104,7 @@ Generator.prototype.initialQuestions = function () {
     name: 'apiModuleName',
     message: 'What would you like to call the module',
     validate: function(input) {
-      return input && input.trim().length > 0;
+      return input && input.replace(pathRegex, "").trim().length > 0;
     }
   };
   var prompt2 = {
@@ -124,7 +149,10 @@ Generator.prototype.initialQuestions = function () {
   if (prompts.length > 0) {
     this.prompt(prompts, function (props) {
       this.ramlFilename = props.ramlFilename || this.ramlFilename;
-      this.apiModuleName = props.apiModuleName;
+      this.apiModuleName = props.apiModuleName.replace(pathRegex, "");
+
+      console.log('Chosen RAML file name: ', this.ramlFilename);
+      console.log('Angular application module name:', this.apiModuleName);
 
       done();
     }.bind(this));
