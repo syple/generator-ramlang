@@ -19,7 +19,7 @@ module.exports.getDistPath = function() {
   var bowerContentsFolderName = 'bower_components';
 
   if (fs.existsSync(bowerCustomConfPath)) {
-    var contents = readJSONFile(bowerCustomConfPath, true);
+    var contents = this.readJSONFile(bowerCustomConfPath, true);
     if (contents.directory) {
       appPath = contents.directory.replace(bowerContentsFolderName, '');
 

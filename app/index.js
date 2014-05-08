@@ -116,7 +116,7 @@ Generator.prototype.initialQuestions = function () {
   var prompt3 = {
     type: 'input',
     name: 'ramlFilename',
-    message: 'I need the path to your RAML file. This can be a url: ',
+    message: 'I need the path to your RAML file. This can be a url (http|https): ',
     validate: function(input) {
       var filePath = path.resolve(input);
       return path.extname(filePath).indexOf('.raml') > -1;
@@ -151,8 +151,9 @@ Generator.prototype.initialQuestions = function () {
       this.ramlFilename = props.ramlFilename || this.ramlFilename;
       this.apiModuleName = props.apiModuleName.replace(pathRegex, "");
 
-      console.log('Chosen RAML file name: ', this.ramlFilename);
-      console.log('Angular application module name:', this.apiModuleName);
+
+      console.log('\nAngular application module name:', this.apiModuleName);
+      console.log('Chosen RAML file: ', this.ramlFilename, '\n');
 
       done();
     }.bind(this));
@@ -208,12 +209,12 @@ Generator.prototype.readRamlFile = function() {
         } else {
           self.log('');
         }
+        self.log(); // add new line
 
         self.ramlSpecObj = data;
       }, function(error) {
-        self.log('');
         self.log(chalk.red('Failed to read RAML file: ' + error));
-
+        self.log();
       })
       .finally(endFn);
   };
