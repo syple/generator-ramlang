@@ -1,7 +1,7 @@
 {
   "name": "generator-ramlang",
   "version": "0.1.0",
-  "description": "A generator for creating angular services based off a RAML spec file.",
+  "description": "A generator to create angular services based off a RAML spec document.",
   "license": "MIT",
   "main": "app/index.js",
   "repository": "alexios3d/generator-ramlang",
@@ -25,7 +25,8 @@
     "angular",
     "generator",
     "rest",
-    "api"
+    "api",
+    "yeoman"
   ],
   "dependencies": {
     "chalk": "~0.4.0",
