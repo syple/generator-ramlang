@@ -1,12 +1,21 @@
-var linewrap = require('linewrap');
+var linewrap = require('linewrap'); // https://www.npmjs.org/package/linewrap
 var markdown = require('markdown').markdown;
 var Entities = require('html-entities').AllHtmlEntities;
 
 var entities = new Entities();
 var wrap = linewrap(110, {
-  lineBreak: [/\n|<br ?\/>/, '\n'],
-  respectLineBreaks: 'multi',
-  mode: 'hard'
+  /**
+   * Converts all <br /> and double \n line breaks into a single line break.
+   */
+  lineBreak: [/(<br ?\/>)+|\n\n/, '\n'],
+
+  /**
+   * Ensures that single words overflow the line wrap length.
+   */
+  mode: 'soft',
+//  whitespace: 'collapse',
+  wrapLineIndentBase: /(:|-)/,
+  wrapLineIndent: '2'
 });
 
 module.exports = {};
@@ -22,15 +31,26 @@ module.exports.formatDescription = function(description, isForComments) {
 
   var finalDescription = markdown.toHTML(description || '');
 
-  // Decode and html left over
+  // Decode any html encoded values left over ie. &#39;
   finalDescription = entities.decode(finalDescription);
 
-  // Strip HTML tags
-  finalDescription = stripHTML(finalDescription);
+  finalDescription = finalDescription.replace(/<br ?\/>/mg, '\n\n');
+
+  // Handle ul list formatting
+  finalDescription = finalDescription.replace(/(<ul>|<\/li>)/mg, '$1\n\n');
+
+  // Strip all HTML tags
+  finalDescription = stripAllHTML(finalDescription);
 
   // Wrap description
   finalDescription = wrap(finalDescription).trim();
 
+  // Apply comment format like so:
+  //
+  // /**
+  //  * This is the comment format.
+  //  */
+  //
   if (isForComments) {
     finalDescription = finalDescription.replace(/^/mg, ' * ');
     finalDescription = '/**\n' + finalDescription;
@@ -46,6 +66,6 @@ module.exports.formatDescription = function(description, isForComments) {
  * @param {String} str - The string value to remove the HTML tags from.
  * @returns {String}
  */
-var stripHTML = function(str) {
+var stripAllHTML = function(str) {
   return str.replace(/(<([^>]+)>)/ig,"");
 };
