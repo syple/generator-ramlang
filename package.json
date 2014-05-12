@@ -1,6 +1,6 @@
 {
   "name": "generator-ramlang",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A generator to create RESTful angular services based off a RAML spec document",
   "license": "MIT",
   "main": "app/index.js",
@@ -24,10 +24,9 @@
     "ramlang",
     "raml",
     "angular",
-    "generator",
+    "yeoman-generator",
     "rest",
-    "api",
-    "yeoman"
+    "api"
   ],
   "dependencies": {
     "chalk": "~0.4.0",
