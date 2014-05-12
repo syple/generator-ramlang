@@ -81,10 +81,12 @@ Generator.prototype.welcome = function() {
   if (this.options['welcome-off'] == true) { return; }
 
   var ramlang ="\n" +
-    chalk.cyan("-----       /\\      |\\    /|   |        ") + chalk.red("   /\\      |\\   |    /---+ \n") +
-    chalk.cyan("     |     /  \\     | \\  / |   |        ") + chalk.red("  /  \\     | \\  |   |      \n") +
-    chalk.cyan("  ---     / -- \\    |  \\/  |   |        ") + chalk.red(" / -- \\    |  \\ |   |  --| \n") +
-    chalk.cyan("     \\   /      \\   |      |   |_____   ") + chalk.red("/      \\   |   \\|   +---/  \n");
+      chalk.cyan('██████╗   █████╗  ███╗   ███╗ ██╗      ')+chalk.red(' █████╗  ███╗   ██╗  ██████╗\n') +
+      chalk.cyan('██╔══██╗ ██╔══██╗ ████╗ ████║ ██║      ')+chalk.red('██╔══██╗ ████╗  ██║ ██╔════╝\n') +
+      chalk.cyan('██████╔╝ ███████║ ██╔████╔██║ ██║      ')+chalk.red('███████║ ██╔██╗ ██║ ██║  ███╗\n') +
+      chalk.cyan('██╔══██╗ ██╔══██║ ██║╚██╔╝██║ ██║      ')+chalk.red('██╔══██║ ██║╚██╗██║ ██║   ██║\n') +
+      chalk.cyan('██║  ██║ ██║  ██║ ██║ ╚═╝ ██║ ███████╗ ')+chalk.red('██║  ██║ ██║ ╚████║ ╚██████╔╝\n') +
+      chalk.cyan('╚═╝  ╚═╝ ╚═╝  ╚═╝ ╚═╝     ╚═╝ ╚══════╝ ')+chalk.red('╚═╝  ╚═╝ ╚═╝  ╚═══╝  ╚═════╝');
 
   this.log(ramlang);
 
