@@ -81,12 +81,12 @@ Generator.prototype.welcome = function() {
   if (this.options['welcome-off'] == true) { return; }
 
   var ramlang ="\n" +
-      chalk.cyan('██████╗   █████╗  ███╗   ███╗ ██╗      ')+chalk.red(' █████╗  ███╗   ██╗  ██████╗\n') +
-      chalk.cyan('██╔══██╗ ██╔══██╗ ████╗ ████║ ██║      ')+chalk.red('██╔══██╗ ████╗  ██║ ██╔════╝\n') +
-      chalk.cyan('██████╔╝ ███████║ ██╔████╔██║ ██║      ')+chalk.red('███████║ ██╔██╗ ██║ ██║  ███╗\n') +
-      chalk.cyan('██╔══██╗ ██╔══██║ ██║╚██╔╝██║ ██║      ')+chalk.red('██╔══██║ ██║╚██╗██║ ██║   ██║\n') +
-      chalk.cyan('██║  ██║ ██║  ██║ ██║ ╚═╝ ██║ ███████╗ ')+chalk.red('██║  ██║ ██║ ╚████║ ╚██████╔╝\n') +
-      chalk.cyan('╚═╝  ╚═╝ ╚═╝  ╚═╝ ╚═╝     ╚═╝ ╚══════╝ ')+chalk.red('╚═╝  ╚═╝ ╚═╝  ╚═══╝  ╚═════╝');
+      chalk.cyan('██████╗   █████╗  ███╗   ███╗ ██╗      ')+chalk.red(' █████╗  ███╗   ██╗  ██████╗  \n') +
+      chalk.cyan('██╔══██╗ ██╔══██╗ ████╗ ████║ ██║      ')+chalk.red('██╔══██╗ ████╗  ██║ ██╔════╝  \n') +
+      chalk.cyan('██████╔╝ ███████║ ██╔████╔██║ ██║      ')+chalk.red('███████║ ██╔██╗ ██║ ██║  ███╗ \n') +
+      chalk.cyan('██╔══██╗ ██╔══██║ ██║╚██╔╝██║ ██║      ')+chalk.red('██╔══██║ ██║╚██╗██║ ██║   ██║ \n') +
+      chalk.cyan('██║  ██║ ██║  ██║ ██║ ╚═╝ ██║ ███████╗ ')+chalk.red('██║  ██║ ██║ ╚████║ ╚██████╔╝ \n') +
+      chalk.cyan('╚═╝  ╚═╝ ╚═╝  ╚═╝ ╚═╝     ╚═╝ ╚══════╝ ')+chalk.red('╚═╝  ╚═╝ ╚═╝  ╚═══╝  ╚═════╝  \n');
 
   this.log(ramlang);
 
@@ -369,6 +369,8 @@ Generator.prototype.generate = function() {
     this.log('No destination path provided');
     return;
   }
+
+  this.log('Generating resource' + (this.selectedResourceObjs.length != 1 ? 's' : ''));
 
   this.conflicter.force = this.options.force;
 

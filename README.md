@@ -1,7 +1,7 @@
 # generator-ramlang
 
 RAMLang is a simple and easy to use command line tool. It's main goal is to provide [AngularJS](http://angularjs.org) services which help communicate with RESTful API's.
-How it works is it takes a [RAML](http://raml.org/) spec document and generates the RESTful resources in a contained module. Optionally you can choose which API resource you want to generate and also extent on top on the generated source.
+How it works is it takes a [RAML](http://raml.org/) spec document and generates the RESTful resources in a contained module. Optionally you can choose which API resource you want to generate and also extend on top of the generated source.
 
 ## Prerequisites
 [node.js](http://nodejs.org/) ~0.10.0
@@ -32,7 +32,7 @@ _Please note that the name will be suffixed with **'-api'**. If you provide **'a
 
 You have complete control on how you want to format the name, just keep in mind that the name will also be used as the file name of the AngularJS application file.
 
-#####Example inputing the name of the module
+#####Example inputting the name of the module
 
     [?] What would you like to call the module: api
 

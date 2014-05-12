@@ -1,10 +1,10 @@
 {
   "name": "generator-ramlang",
   "version": "0.1.0",
-  "description": "A generator to create angular services based off a RAML spec document.",
+  "description": "A generator to create RESTful angular services based off a RAML spec document",
   "license": "MIT",
   "main": "app/index.js",
-  "repository": "alexios3d/generator-ramlang",
+  "repository": "https://github.com/syple/generator-ramlang.git",
   "author": {
     "name": "Alex Lambrinos",
     "email": "alex@syple.com.au",
@@ -21,6 +21,7 @@
   ],
   "keywords": [
     "generator-ramlang",
+    "ramlang",
     "raml",
     "angular",
     "generator",
