@@ -41,7 +41,7 @@ If there is no RAML file found or you have chosen **'Custom'** then you need to 
 
 _Note: RAML files that are downloaded will be placed in the current working directory._
   
-#####Example with multiple choices:  
+#####Example with multiple choices:
 
     [?] Which RAML file would you like to use: (Use arrow keys)
       ❯ some.raml
@@ -102,13 +102,13 @@ The last thing we need to do is to tell the generator where to put the generated
 
 #####Example when Bower is installed and the '.bowerrc' file exists:
 
-######Contents of the Bower config file:
+#####Contents of the Bower config file:
 
     {
         "directory": "app/bower_components"
     }
 
-######Result:
+#####Result:
 
     This is where i'm going to generate the files: 
                  
@@ -118,11 +118,11 @@ The last thing we need to do is to tell the generator where to put the generated
 
 #####Example when Bower is installed and the '.bowerrc' file doesn't exist:
 
-######Location of 'bower_components':
+#####Location of 'bower_components':
 
     app/bower_components
 
-######Result:
+#####Result:
 
     This is where i'm going to generate the files: 
                  
@@ -176,7 +176,3 @@ When RAMLang generates resources, it can prompt you to overwrite a file if it al
 #####Save the usage of '--force' to the configuration file
 
     $ yo ramlang --force --save
-
-## License
-
-MIT

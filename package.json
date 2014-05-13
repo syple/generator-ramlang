@@ -1,15 +1,22 @@
 {
   "name": "generator-ramlang",
   "version": "0.1.1",
-  "description": "A generator to create RESTful angular services based off a RAML spec document",
-  "license": "MIT",
+  "description": "A Yeoman generator to create RESTful Angular services based off a RAML spec document",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/syple/generator-ramlang/blob/master/LICENSE-MIT"
+    }
+  ],
   "main": "app/index.js",
   "repository": "https://github.com/syple/generator-ramlang.git",
   "author": {
-    "name": "Alex Lambrinos",
-    "email": "alex@syple.com.au",
-    "url": "https://github.com/alexios3d"
+    "name": "Syple Technologies",
+    "url": "http://syple.com.au"
   },
+  "contributors": [
+    "Alex Lambrinos <alex@syple.com.au> (https://github.com/alexios3d)"
+  ],
   "engines": {
     "node": ">=0.10.0"
   },
