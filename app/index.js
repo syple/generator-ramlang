@@ -193,7 +193,7 @@ Generator.prototype.readRamlFile = function() {
 
   var endFn = function() {
 
-    if (self.selectedResources) {
+    if (self.selectedResources && self.ramlSpecObj) {
       self.ramlSpecObj.resources = utils.filterResources(self.selectedResources, self.ramlSpecObj.resources);
       self.selectedResourceObjs = self.ramlSpecObj.resources;
     }
@@ -214,11 +214,14 @@ Generator.prototype.readRamlFile = function() {
         self.log(); // add new line
 
         self.ramlSpecObj = data;
-      }, function(error) {
-        self.log(chalk.red('Failed to read RAML file: ' + error));
+      })
+      .catch(function(error) {
+        self.log();
+        self.log();
+        self.log(chalk.red('RAML Parser failed: \n' + error));
         self.log();
       })
-      .finally(endFn);
+      .finally(endFn)
   };
 
   if (isUri) {
