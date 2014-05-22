@@ -1,6 +1,6 @@
 {
   "name": "generator-ramlang",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A Yeoman generator to create RESTful Angular services based off a RAML spec document",
   "licenses": [
     {
@@ -24,14 +24,16 @@
     "test": "mocha"
   },
   "files": [
-    "app"
+    "app",
+    "lib",
+    "templates"
   ],
   "keywords": [
+    "yeoman-generator",
     "generator-ramlang",
     "ramlang",
     "raml",
     "angular",
-    "yeoman-generator",
     "rest",
     "api"
   ],

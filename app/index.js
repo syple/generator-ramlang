@@ -10,9 +10,9 @@ var fs          = require('fs');
 var inflect     = require('inflection');
 
 var utils       = require('./utils');
-var application = require('../generator/app');
-var provider    = require('../generator/provider');
-var service     = require('../generator/service');
+var application = require('../lib/app');
+var provider    = require('../lib/provider');
+var service     = require('../lib/service');
 
 var pathRegex = /[\|&;\$%@"<>\(\)\+,]/g;
 
