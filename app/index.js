@@ -10,6 +10,7 @@ var fs          = require('fs');
 var inflect     = require('inflection');
 
 var utils       = require('./utils');
+var ramlUtils   = require('../lib/utils');
 var application = require('../lib/app');
 var provider    = require('../lib/provider');
 var service     = require('../lib/service');
@@ -193,9 +194,13 @@ Generator.prototype.readRamlFile = function() {
 
   var endFn = function() {
 
-    if (self.selectedResources && self.ramlSpecObj) {
-      self.ramlSpecObj.resources = utils.filterResources(self.selectedResources, self.ramlSpecObj.resources);
-      self.selectedResourceObjs = self.ramlSpecObj.resources;
+    if (self.ramlSpecObj) {
+      ramlUtils.formatResourceDisplayName(self.ramlSpecObj);
+
+      if (self.selectedResources) {
+        self.ramlSpecObj.resources = utils.filterResources(self.selectedResources, self.ramlSpecObj.resources);
+        self.selectedResourceObjs = self.ramlSpecObj.resources;
+      }
     }
 
     clearInterval(progressInterval);
