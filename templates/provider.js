@@ -29,7 +29,7 @@ angular.module('<%= app.name %>')
       cleanUrl = cleanUrl.split('/');
 
       // remove all of the last entries if they are empty string.
-      while(cleanUrl.length > 0 && cleanUrl[cleanUrl.length - 1] === "") {
+      while(cleanUrl.length > 0 && cleanUrl[cleanUrl.length - 1] === '') {
         cleanUrl.pop();
       }
 
@@ -77,13 +77,13 @@ angular.module('<%= app.name %>')
     var buildUrl = function(resourcePath, id, query) {
 
       // If the resource path doesn't start with a '/' then prefix it.
-      if (resourcePath.indexOf('/') != 0) {
+      if (resourcePath.indexOf('/') !== 0) {
         resourcePath = '/' + resourcePath;
       }
 
       var parts = [resourcePath];
 
-      if (angular.isDefined(id) && id != null) {
+      if (angular.isDefined(id) && id !== null) {
         parts.push(id);
       }
 

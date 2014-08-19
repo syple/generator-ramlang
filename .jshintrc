@@ -4,7 +4,7 @@
   "bitwise": true,
   "camelcase": true,
   "curly": true,
-  "eqeqeq": true,
+  "eqeqeq": false,
   "immed": true,
   "indent": 2,
   "latedef": true,
@@ -14,8 +14,13 @@
   "regexp": true,
   "undef": true,
   "unused": true,
-  "strict": true,
+  "strict": false,
   "trailing": true,
   "smarttabs": true,
-  "white": true
+  "white": true,
+  "eqnull": true,
+  "laxcomma": true,
+  "globals": {
+    "angular": true
+  }
 }

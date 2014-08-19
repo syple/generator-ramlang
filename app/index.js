@@ -17,7 +17,7 @@ var service     = require('../lib/service');
 
 var pathRegex = /[\|&;\$%@"<>\(\)\+,]/g;
 
-var Generator = module.exports = function Generator(args, options) {
+var Generator = module.exports = function Generator() {
   yeoman.generators.Base.apply(this, arguments);
 
   // Register options
@@ -71,6 +71,7 @@ Generator.prototype.config = function() {
     this.generateInOneFile  = this.config.get('allInOneFile');
     this.filesDist          = this.config.get('destination');
     this.options.force      = this.config.get('force');
+    this.mediaTypeExtension = this.config.get('mediaTypeExtension');
   }
 };
 /**
@@ -79,9 +80,9 @@ Generator.prototype.config = function() {
 Generator.prototype.welcome = function() {
 
   // Don't display the welcome message if the option is provided.
-  if (this.options['welcome-off'] == true) { return; }
+  if (this.options['welcome-off'] === true) { return; }
 
-  var ramlang ="\n" +
+  var ramlang ='\n' +
       chalk.cyan('██████╗   █████╗  ███╗   ███╗ ██╗      ')+chalk.red(' █████╗  ███╗   ██╗  ██████╗  \n') +
       chalk.cyan('██╔══██╗ ██╔══██╗ ████╗ ████║ ██║      ')+chalk.red('██╔══██╗ ████╗  ██║ ██╔════╝  \n') +
       chalk.cyan('██████╔╝ ███████║ ██╔████╔██║ ██║      ')+chalk.red('███████║ ██╔██╗ ██║ ██║  ███╗ \n') +
@@ -91,7 +92,7 @@ Generator.prototype.welcome = function() {
 
   this.log(ramlang);
 
-  this.log("Welcome to RAMLang!!!\n");
+  this.log('Welcome to RAMLang!!!\n');
 };
 
 /**
@@ -107,7 +108,7 @@ Generator.prototype.initialQuestions = function () {
     name: 'apiModuleName',
     message: 'What would you like to call the module',
     validate: function(input) {
-      return input && input.replace(pathRegex, "").trim().length > 0;
+      return input && input.replace(pathRegex, '').trim().length > 0;
     }
   };
   var prompt2 = {
@@ -141,18 +142,18 @@ Generator.prototype.initialQuestions = function () {
     prompts = [prompt1, prompt3];
   }
 
-  if (this.ramlFilename != undefined && this.ramlFilename != null) {
+  if (this.ramlFilename) {
     prompts = [prompt1];
   }
 
-  if (this.apiModuleName != undefined && this.apiModuleName != null) {
+  if (this.apiModuleName) {
     prompts.shift(); // remove the first prompt
   }
 
   if (prompts.length > 0) {
     this.prompt(prompts, function (props) {
       this.ramlFilename = props.ramlFilename || this.ramlFilename;
-      this.apiModuleName = props.apiModuleName.replace(pathRegex, "");
+      this.apiModuleName = props.apiModuleName.replace(pathRegex, '');
 
 
       console.log('\nAngular application module name:', this.apiModuleName);
@@ -181,8 +182,8 @@ Generator.prototype.readRamlFile = function() {
 
   var done = this.async();
   var self = this;
-  var isHttp = this.ramlFilename.indexOf('http://') == 0;
-  var isHttps = this.ramlFilename.indexOf('https://') == 0;
+  var isHttp = this.ramlFilename.indexOf('http://') === 0;
+  var isHttps = this.ramlFilename.indexOf('https://') === 0;
   var isUri = isHttp || isHttps;
   var didManageToPrintADot = false;
   util.print(chalk.blue('Reading RAML file'));
@@ -226,7 +227,7 @@ Generator.prototype.readRamlFile = function() {
         self.log(chalk.red('RAML Parser failed: \n' + error));
         self.log();
       })
-      .finally(endFn)
+      .finally(endFn);
   };
 
   if (isUri) {
@@ -281,13 +282,13 @@ Generator.prototype.finalQuestions = function() {
 
   // Map all of the resource display names
   this.allResourceDisplayNames = this.ramlSpecObj.resources.map(function(item) {
-    return item.displayName;
+    return ramlUtils.cleanDisplayName(item.displayName, true);
   });
 
   var filesDist = this.filesDist || utils.getDistPath();
   var message = 'This is where i\'m going to generate the files: \n\n' + filesDist + '\n\n Is this correct';
-  if (filesDist == '' || filesDist == '.') {
-    message = "Generate all files in the current directory";
+  if (filesDist === '' || filesDist == '.') {
+    message = 'Generate all files in the current directory';
   }
 
   if (this.ramlFiles.length > 0) {
@@ -304,7 +305,7 @@ Generator.prototype.finalQuestions = function() {
       message: 'Select which resources you want to generate:',
       choices: this.allResourceDisplayNames,
       when: function(response) {
-        return !response.shouldGenAllResources
+        return !response.shouldGenAllResources;
       }
     };
 
@@ -328,25 +329,36 @@ Generator.prototype.finalQuestions = function() {
       message: 'Supply the correct path:',
       choices: this.allResourceDisplayNames,
       when: function(response) {
-        return !response.filesDistCorrect || (!filesDist || filesDist.trim() == '');
+        return !response.filesDistCorrect || (!filesDist || filesDist.trim() === '');
       }
     };
 
-    if (this.selectedResources == undefined || this.selectedResources == null) {
+    var prompt6 = {
+      type: 'list',
+      name: 'mediaTypeExtension',
+      message: 'Select which media type extension to use:',
+      choices: ['json', 'xml']
+    };
+
+    if (!this.mediaTypeExtension) {
+      prompts.push(prompt6);
+    }
+
+    if (!this.selectedResources) {
       prompts.push(prompt1);
       prompts.push(prompt2);
     }
 
-    if (this.generateInOneFile == undefined || this.generateInOneFile == null) {
-      prompts.push(prompt3)
+    if (!this.generateInOneFile) {
+      prompts.push(prompt3);
     }
 
-    if (this.filesDist == undefined || this.filesDist == null) {
+    if (!this.filesDist) {
       prompts.push(prompt4);
       prompts.push(prompt5);
     }
   } else {
-    this.log(chalk.red('There needs to be at least one \'.raml\' file in the current working directory.'))
+    this.log(chalk.red('There needs to be at least one \'.raml\' file in the current working directory.'));
   }
 
   if (prompts.length > 0) {
@@ -356,6 +368,7 @@ Generator.prototype.finalQuestions = function() {
       this.filesDist = (props.filesDist || filesDist).trim();
       this.ramlSpecObj.resources = utils.filterResources(this.selectedResources, this.ramlSpecObj.resources);
       this.selectedResourceObjs = this.ramlSpecObj.resources;
+      this.mediaTypeExtension = '.' + props.mediaTypeExtension;
       done();
     }.bind(this));
   } else {
@@ -408,7 +421,7 @@ Generator.prototype.generate = function() {
   this.writeTemplateToDest('api-provider', providerTemplateText);
 
   this.selectedResourceObjs.forEach(function(resource) {
-    var serviceTemplateText = service.generate(moduleName, resource, !this.generateInOneFile);
+    var serviceTemplateText = service.generate(moduleName, resource, !this.generateInOneFile, this.mediaTypeExtension);
     this.writeTemplateToDest(resource.displayName, serviceTemplateText);
   }, this);
 
@@ -434,6 +447,7 @@ Generator.prototype.end = function() {
     this.config.set('allInOneFile', this.generateInOneFile);
     this.config.set('destination', this.filesDist);
     this.config.set('force', this.options.force);
+    this.config.set('mediaTypeExtension', this.mediaTypeExtension);
 
     this.config.forceSave();
   }
