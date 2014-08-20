@@ -100,7 +100,6 @@ angular.module('<%= app.name %>')
        * @returns {Object} The promise object which made the request.
        */
       get: function(resourceName, id, query) {
-        console.info('going to call resource', resourceName, 'using http verb GET with id', id || 'NONE');
         return callApi('GET', resourceName, id, query);
       },
 
@@ -112,7 +111,6 @@ angular.module('<%= app.name %>')
        * @returns {Object} The promise object which made the request.
        */
       post: function(resourceName, data) {
-        console.info('going to call resource', resourceName, 'using http verb POST with data', data);
         return callApi('POST', resourceName, null, null, data);
       },
 
@@ -125,7 +123,6 @@ angular.module('<%= app.name %>')
        * @returns {Object} The promise object which made the request.
        */
       put: function(resourceName, id, data) {
-        console.info('going to call resource', resourceName, 'using http verb PUT with data', data, 'and id', id);
         return callApi('PUT', resourceName, id, null, data);
       },
 
@@ -137,7 +134,6 @@ angular.module('<%= app.name %>')
        * @returns {Object} The promise object which made the request.
        */
       delete: function(resourceName, id) {
-        console.info('going to call resource', resourceName, 'using http verb DELETE with id', id || 'NONE');
         return callApi('DELETE', resourceName, id);
       }
     };
