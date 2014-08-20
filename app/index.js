@@ -185,13 +185,9 @@ Generator.prototype.readRamlFile = function() {
   var isHttp = this.ramlFilename.indexOf('http://') === 0;
   var isHttps = this.ramlFilename.indexOf('https://') === 0;
   var isUri = isHttp || isHttps;
-  var didManageToPrintADot = false;
   util.print(chalk.blue('Reading RAML file'));
 
-  var progressInterval = setInterval(function() {
-    util.print('.');
-    didManageToPrintADot = true;
-  }, 100);
+  var progressInterval;
 
   var endFn = function() {
 
@@ -204,21 +200,18 @@ Generator.prototype.readRamlFile = function() {
       }
     }
 
-    clearInterval(progressInterval);
+    if (progressInterval) {
+      clearInterval(progressInterval);
+    }
+
     done();
   };
 
   var loadRaml = function() {
     ramlParser.loadFile(self.ramlFilename)
       .then(function(data) {
-
-        if (didManageToPrintADot) {
-          self.log.ok();
-        } else {
-          self.log('');
-        }
+        util.print(chalk.green(' ✔\n'));
         self.log(); // add new line
-
         self.ramlSpecObj = data;
       })
       .catch(function(error) {
@@ -245,6 +238,10 @@ Generator.prototype.readRamlFile = function() {
     }
 
     saveFilePath = path.basename(saveFilePath);
+
+    progressInterval = setInterval(function() {
+      util.print('.');
+    }, 100);
 
     var file = fs.createWriteStream(saveFilePath);
     requester.get(this.ramlFilename, function(response) {
@@ -391,7 +388,7 @@ Generator.prototype.generate = function() {
     return;
   }
 
-  this.log('Generating resource' + (this.selectedResourceObjs.length != 1 ? 's' : ''));
+  this.log('\nGenerating resource' + (this.selectedResourceObjs.length != 1 ? 's' : ''));
 
   this.conflicter.force = this.options.force;
 

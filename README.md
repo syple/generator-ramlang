@@ -57,9 +57,16 @@ Once you have selected the RAML file then the generator will read the file.
     Angular application module name: customer
     Chosen RAML file:  some.raml 
          
-    Reading RAML file.✔ 
+    Reading RAML file ✔
 
-When read, you can choose to generate all of the resources or be able to select the resources to generate.
+After reading the file you will be prompted to select the media type extension to use when generating resources.
+RAMLang will only resolve the media type extension if the RAML file uses the reserved uri parameter '{mediaTypeExtension}'.
+
+    [?] Select which media type extension to use: (Use arrow keys)
+    ❯ json 
+      xml 
+
+Now you can choose to generate all of the resources or be able to select the resources to generate.
 
     [?] Would you like to generate all resources: (Y/n) 
 
